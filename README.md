@@ -1,5 +1,18 @@
-# Mod "Give Elite Item" para Risk of Rain 2  ![Versão do Mod](https://img.shields.io/badge/Versão-1.0.0-brightgreen)
+# Give Elite Item — Mod para Risk of Rain 2
 
+**Mod experimental que atribui automaticamente um item/equipamento de elite aleatório no início da partida.**
+
+![Status](https://img.shields.io/badge/status-mod%20experimental-64748b)
+
+## Visão geral
+
+A proposta é criar partidas com escolhas e desafios diferentes a partir de um item elite sorteado. Consulte a descrição original abaixo para o comportamento esperado, créditos e forma de uso.
+
+**Compatibilidade:** a versão de Risk of Rain 2 indicada na documentação original é histórica e precisa ser verificada no jogo e no loader atual antes de afirmar suporte às atualizações recentes.
+
+> Projeto de comunidade, não oficial. Os direitos de Risk of Rain 2 pertencem aos respectivos titulares.
+
+---
 
 **Prontos para uma nova aventura?**
 
