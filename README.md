@@ -1,4 +1,15 @@
-# PlayWithEliteItem
+# PlayWithEliteItem — Risk of Rain 2 Mod
+
+**Mod publicado no Thunderstore por CONDE (AlchemyFlame).**
+
+[🎮 Versão pública no Thunderstore](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [💻 Repositório no GitHub](https://github.com/HelioConde/PlayWithEliteItem)
+
+| Canal | Versão | Situação |
+| --- | --- | --- |
+| **Thunderstore** | **1.0.1** | Versão pública anterior: sorteia um aspecto para o segundo slot de equipamento |
+| **GitHub (main)** | **1.1.1** | Fonte modernizada, compilada e com testes de lógica aprovados; ainda não verificada dentro do jogo |
+
+> **Atenção:** baixar pelo Thunderstore instala a versão publicada **1.0.1**, não o código **1.1.1** descrito abaixo. Para testar a nova versão, utilize a DLL produzida pelo workflow do GitHub Actions. Não publique no Thunderstore antes dos testes manuais em solo e multiplayer.
 
 **Risk of Rain 2 mod (BepInEx, C#)** — each player starts a run with one randomly chosen *elite aspect* equipped.
 
@@ -16,7 +27,7 @@
 ## Installing
 
 1. Install Risk of Rain 2 for PC and a matching BepInExPack (r2modman or Thunderstore Mod Manager).
-2. From [GitHub Actions](../../actions), open a successful run and download the **PlayWithEliteItem** artifact; extract `GiveEliteItem.dll`.
+2. To test the **1.1.1 development version**, open a successful run in [GitHub Actions](../../actions), download the **PlayWithEliteItem** artifact and extract `GiveEliteItem.dll`. Installing from Thunderstore currently provides **1.0.1**.
 3. Copy the DLL into `BepInEx/plugins`, then start the game.
 4. Configuration appears in `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg` after first launch.
 
