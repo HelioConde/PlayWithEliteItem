@@ -1,153 +1,95 @@
-<div align="center">
+# PlayWithEliteItem
 
-<h1>⚡ PlayWithEliteItem</h1>
+**Risk of Rain 2 · Random elite aspects · BepInEx · C#**
 
-<strong>Risk of Rain 2 mod · Random elite aspects at the start of a run</strong>
+PlayWithEliteItem entrega um **equipamento de elite aleatório** para cada jogador elegível no início de uma partida. A distribuição acontece no **servidor/host**, usando o inventário original do jogo. Não adiciona HUD, comandos personalizados ou conteúdos novos.
 
-<p>Give runs an extra twist by distributing elite equipment to players automatically. Built in C# with BepInEx and the Risk of Rain 2 API.</p>
+[Thunderstore — versão pública](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar compilação de teste](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Como testar em português](docs/TESTE_NO_JOGO.md)
 
-<a href="https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/"><img alt="Published on Thunderstore" src="https://img.shields.io/badge/Thunderstore-Published-15aa84?style=for-the-badge"></a>
-<a href="https://github.com/HelioConde/PlayWithEliteItem"><img alt="C# and .NET" src="https://img.shields.io/badge/C%23-.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white"></a>
-<a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/License-MIT-334155?style=for-the-badge"></a>
+> **Atenção:** a versão pública **1.0.1** no Thunderstore ainda é a implementação antiga. O código **1.1.1** do GitHub é uma refatoração com comportamento diferente, **ainda não validada dentro do jogo**. Não foi publicada uma nova versão no Thunderstore.
 
-<p><a href="https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/"><strong>Install published mod</strong></a> · <a href="#building-from-source"><strong>Build from source</strong></a> · <a href="#compatibility--testing"><strong>Compatibility</strong></a></p>
+## O que faz a versão 1.1.1
 
-</div>
+- Distribui um aspecto de elite no **slot de equipamento 0** (slot utilizado pela implementação atual).
+- Usa o catálogo de equipamentos do RoR2; não cria itens ou aspectos novos.
+- Dá preferência a aspectos diferentes, permitindo repetição quando todos já foram distribuídos.
+- Respeita as expansões habilitadas na partida.
+- Inclui jogadores que entram depois do começo da partida.
+- Não substitui um equipamento já presente, salvo se a opção for ativada.
 
----
+**Limitação:** o bônus depende do equipamento elite permanecer equipado. Não é um buff permanente independente; substituir o equipamento pode remover o efeito.
 
-## 🎮 What does the mod do?
+## Versões e dependências
 
-On run start, PlayWithEliteItem assigns an **elite aspect equipment** to each eligible player. The passive bonus associated with that elite equipment changes how the run feels without requiring the player to pick up the item manually.
-
-This is a **community mod**, not an official Risk of Rain 2 feature.
-
-### Published version and development version are different
-
-| | Thunderstore release | Current GitHub source |
+| | Thunderstore | GitHub |
 | --- | --- | --- |
-| **Version** | **1.0.1** | **1.1.1** |
-| **Status** | Distributed publicly | Build and regression checks; in-game validation pending |
-| **Equipment behavior** | Original second-slot implementation described in the published listing | Uses the active equipment slot (index `0`) so the elite passive buff can apply |
-| **How to get it** | [Thunderstore package](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) | [GitHub Actions artifact](https://github.com/HelioConde/PlayWithEliteItem/actions), or compile the source |
+| Versão | **1.0.1**, publicada | **1.1.1**, candidata a testes |
+| Mecânica | Segundo slot e troca do mod antigo | Aspecto no slot ativo |
+| Dependências | Pacote antigo com muitos módulos R2API | **1 dependência direta:** `bbepis-BepInExPack-5.4.2122` |
+| Disponibilidade | Instalação pública | DLL de teste gerada pelo GitHub Actions |
 
-The Thunderstore page displayed **approximately 4,000 downloads** in October 2026. This is a dated milestone, not a live counter.
+O BepInExPack instala suas próprias dependências transitivas. **Uma dependência direta não significa um único pacote instalado.** A versão atual do código não usa R2API.
 
-> **Do not mistake source version 1.1.1 for a released Thunderstore update.** The modernized code is under test. Installing the Thunderstore package currently means installing the separately published 1.0.1 build.
+## Instalar a versão de teste
 
-## 📦 Minimal Thunderstore dependencies (next release)
+1. Crie um **perfil de teste separado** no r2modman/Thunderstore Mod Manager e instale o BepInExPack.
+2. Abra [GitHub Actions](https://github.com/HelioConde/PlayWithEliteItem/actions) e escolha a última execução **Build and test mod** com status verde.
+3. Baixe o artefato **PlayWithEliteItem**, extraia `GiveEliteItem.dll` e coloque-o em `BepInEx/plugins` do perfil de teste.
+4. **Não mantenha a DLL antiga da versão 1.0.1 no mesmo perfil.** Inicie o jogo e comece uma partida.
 
-The currently published **1.0.1** package on Thunderstore still lists approximately **30 required packages** because it includes the old full R2API distribution. These reflect the **published package**, not the newer GitHub source.
+Para testar a nova distribuição, use primeiro uma partida solo sem outros mods de gameplay. Confira o roteiro em [docs/TESTE_NO_JOGO.md](docs/TESTE_NO_JOGO.md).
 
-The refactored **1.1.1** plugin does not use R2API. A [new minimal Thunderstore manifest](thunderstore/manifest.json) now declares just **one direct dependency**:
+## Configuração
 
-```json
-"dependencies": ["bbepis-BepInExPack-5.4.2122"]
-```
+O arquivo `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg` é gerado ao iniciar o jogo com o plugin.
 
-BepInExPack has its own *transitive* requirements, so the mod manager may still install several framework packages. They do **not** need to be duplicated in PlayWithEliteItem's manifest.
-
-To generate a **local release candidate** after compiling:
-
-```bash
-python scripts/validate_manifest.py
-python scripts/package_thunderstore.py
-```
-
-The packager reuses the original icon from the publicly released 1.0.1 ZIP if the repository has no local `thunderstore/icon.png`. [GitHub Actions](https://github.com/HelioConde/PlayWithEliteItem/actions) also produces the ZIP as a **candidate artifact**, but it is **not automatically published**.
-
-See [Thunderstore release preparation](docs/THUNDERSTORE_RELEASE.md). **Gameplay testing is still required** before uploading the reduced-dependency version under the existing CONDE team.
-
-## ✨ Modernized source: feature overview (v1.1.1)
-
-- **Server-authoritative distribution:** only the host/server modifies player inventories.
-- **Automatic assignment:** scans for eligible players, including participants who arrive later.
-- **Distinct aspects first:** selects unused elite aspects until the available pool is exhausted, then permits repeats.
-- **Expansion awareness:** avoids aspects that require a DLC disabled for the run.
-- **Conservative defaults:** chooses from seven classic aspects unless configuration is expanded.
-- **Equipment safety:** by default, players who already have active equipment keep it.
-- **Configurability:** toggle the feature, allowlist, replacement behavior and diagnostic logging.
-
-The plugin grants **elite equipment**, not an independently permanent buff. If the equipment changes, its passive elite effect can disappear.
-
-## 📥 Installation
-
-### Option A — published mod (recommended for normal players)
-
-1. Install a compatible [BepInExPack](https://thunderstore.io/c/riskofrain2/p/bbepis/BepInExPack/) using the Thunderstore Mod Manager or r2modman.
-2. Install [PlayWithEliteItem on Thunderstore](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/).
-3. Launch Risk of Rain 2 with the mod profile enabled.
-
-This installs **1.0.1**, which may not match the behavior of the latest source shown below. Compatibility with your current game/modpack still needs to be verified.
-
-### Option B — test the current GitHub source (for developers)
-
-1. Open [Actions](https://github.com/HelioConde/PlayWithEliteItem/actions) and choose a successful **Build and test mod** run.
-2. Download the **PlayWithEliteItem** artifact and extract `GiveEliteItem.dll`.
-3. Copy the file into your game's `BepInEx/plugins` folder.
-4. Start the game, then configure `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg`.
-
-**This build is experimental.** Back up your mod profile and test solo before hosting multiplayer with it.
-
-## ⚙️ Configuration (current source)
-
-| Setting | Default | Purpose |
+| Opção | Padrão | Efeito |
 | --- | --- | --- |
-| `General.Enabled` | `true` | Enables automatic grants |
-| `Distribution.UniqueBeforeRepeats` | `true` | Prefer different aspects until the list runs out |
-| `Distribution.IncludeAllRegisteredEliteAspects` | `false` | Opt in to wider catalog discovery |
-| `Distribution.AllowedEliteEquipment` | Seven classic aspects | Explicit allowlist when discovery is disabled |
-| `Equipment.ReplaceExistingEquipment` | `false` | Avoid replacing a player's active equipment |
-| `Diagnostics.VerboseLogging` | `false` | Log grants and skipped assignments |
+| `General.Enabled` | `true` | Liga/desliga a distribuição |
+| `Distribution.UniqueBeforeRepeats` | `true` | Evita repetições até esgotar os aspectos |
+| `Distribution.IncludeAllRegisteredEliteAspects` | `false` | Inclui aspectos extras/modificados do catálogo (avançado) |
+| `Distribution.AllowedEliteEquipment` | Sete elites clássicas | Lista de nomes internos separados por vírgula |
+| `Equipment.ReplaceExistingEquipment` | `false` | Autoriza substituir um equipamento existente |
+| `Diagnostics.VerboseLogging` | `false` | Registra detalhes no log do BepInEx |
 
-The default allowlist includes `EliteEarthEquipment`, `EliteFireEquipment`, `EliteHauntedEquipment`, `EliteIceEquipment`, `EliteLightningEquipment`, `EliteLunarEquipment` and `ElitePoisonEquipment`.
+Os sete nomes padrão: `EliteEarthEquipment`, `EliteFireEquipment`, `EliteHauntedEquipment`, `EliteIceEquipment`, `EliteLightningEquipment`, `EliteLunarEquipment`, `ElitePoisonEquipment`.
 
-Automatically discovering additional aspects can include internal or nonstandard equipment. Use that option deliberately and test third-party compatibility.
+## Desenvolver
 
-## Building from source
-
-Install the **.NET 8 SDK** and run from the repository root:
+Requisito: **.NET SDK 8**.
 
 ```bash
 dotnet restore GiveEliteItem.sln
 dotnet build GiveEliteItem.sln -c Release --no-restore
 dotnet run --project tests/PlayWithEliteItem.LogicTests/PlayWithEliteItem.LogicTests.csproj -c Release
+python scripts/validate_manifest.py
 ```
 
-The build generates `GiveEliteItem.dll` under `GiveEliteItem/bin/Release/netstandard2.1/`.
-
-### Project layout
+**Organização do projeto:**
 
 ```text
 GiveEliteItem/
-  GiveEliteItem.cs              Game events, inventory grants and config
-  AspectSelection.cs           Game-independent selection logic
-tests/
-  PlayWithEliteItem.LogicTests/ Regression tests for selection behavior
-.github/workflows/build.yml     Automated build, tests and DLL artifact
-GiveEliteItem.sln               .NET solution
-LICENSE                         MIT
+  GiveEliteItem.cs         Entrada do plugin e ciclo de vida
+  EliteSettings.cs         Configurações BepInEx
+  EliteRunDistributor.cs   Jogadores, sorteio por partida e inventário
+  EliteAspectCatalog.cs    Filtro de elites e DLCs habilitadas
+  EliteEquipmentNames.cs   Leitura da lista configurada de elites
+  AspectSelection.cs      Sorteio independente do jogo
+tests/                     Testes da lógica de distribuição
+scripts/                   Validação e montagem do pacote Thunderstore
+thunderstore/              Manifesto e changelog da próxima publicação
+docs/                      Testes manuais e orientações de publicação
+.github/workflows/         Compilação, testes e ZIP candidato
 ```
 
-## Compatibility & testing
+O GitHub Actions verifica a compilação, executa testes da lógica e produz uma DLL e um ZIP **candidato**, sem publicar no Thunderstore. [Preparar publicação](docs/THUNDERSTORE_RELEASE.md).
 
-The workflow compiles the plugin and exercises the selection algorithm (unique picks, exhausted pools, invalid inputs and repeated draws). **It does not run Risk of Rain 2 itself.**
+## Antes de publicar
 
-In-game verification is still needed for:
+**Pendente:** comprovar efeitos, coleta/equipamento, mudanças de fase e multiplayer real com clientes sem o mod. Uma compilação aprovada **não comprova** que a mecânica funciona na partida.
 
-- [ ] Solo: correct elite aspect and visible passive effect.
-- [ ] Multiplayer: synchronized inventory and one grant per eligible player.
-- [ ] Late joins: player receives an aspect once inventory is ready.
-- [ ] More players than available aspects: repeats work without a freeze.
-- [ ] New run: distribution state resets.
-- [ ] Occupied equipment slot: existing item stays unless replacement is enabled.
-- [ ] Disabled DLC and modded aspects: only valid aspects are assigned.
-- [ ] Compatibility with current BepInEx, Risk of Rain 2 and other installed mods.
+Abra um [issue](https://github.com/HelioConde/PlayWithEliteItem/issues) com logs e passos de reprodução caso encontre problemas.
 
-Issues and reproduction steps are welcome through [GitHub Issues](https://github.com/HelioConde/PlayWithEliteItem/issues).
+---
 
-## 📜 Credits and license
-
-Developed by **Hélio Conde (AlchemyFlame)**. Source code is available under the [MIT License](LICENSE).
-
-*Risk of Rain 2 and its assets belong to their respective rights holders. This is an independent community mod.*
+**Autoria:** AlchemyFlame · Licença [MIT](LICENSE) · Projeto não oficial de *Risk of Rain 2*.
