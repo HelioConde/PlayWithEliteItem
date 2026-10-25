@@ -1,8 +1,8 @@
 {
   "name": "PlayWithEliteItem",
-  "version_number": "1.1.1",
+  "version_number": "1.1.2",
   "website_url": "https://github.com/HelioConde/PlayWithEliteItem",
-  "description": "Distribui um equipamento de elite aleatorio para cada jogador no inicio da partida. Mod server-side.",
+  "description": "Concede um aspecto elite aleatorio no segundo slot logico e alterna automaticamente os equipamentos apos o uso. Server-side.",
   "dependencies": [
     "bbepis-BepInExPack-5.4.2122"
   ]

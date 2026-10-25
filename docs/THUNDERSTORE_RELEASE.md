@@ -4,7 +4,7 @@
 
 The public Thunderstore release declares a broad R2API dependency. The legacy R2API suite and its submodules cause a long chain of installed packages. Thunderstore shows both direct and transitive dependencies.
 
-The **current GitHub source v1.1.1** does not import or call `R2API`. Its runtime uses BepInEx and the built-in Risk of Rain 2/Unity APIs. NuGet `RiskOfRain2.GameLibs` and `UnityEngine.Modules` are compile-time reference assemblies, not Thunderstore dependencies.
+The **current GitHub source v1.1.2** does not import or call `R2API`. Its runtime uses BepInEx and the built-in Risk of Rain 2/Unity APIs. NuGet `RiskOfRain2.GameLibs` and `UnityEngine.Modules` are compile-time reference assemblies, not Thunderstore dependencies.
 
 ## Minimal manifest
 
@@ -32,4 +32,4 @@ GitHub Actions runs validation and builds a candidate archive. The workflow **do
 - Install the candidate from a clean profile and confirm that the dependency resolver no longer installs R2API.
 - Upload the candidate ZIP under the **existing CONDE team** and package name **PlayWithEliteItem**.
 - Versions on Thunderstore are immutable: this needs a new version, not an edit of the existing 1.0.1.
-- **Do not** change source-version behavior just to shrink dependencies. In particular, public 1.0.1 uses the original second-slot mechanism; source 1.1.1 behaves differently.
+- **Do not** change source-version behavior just to shrink dependencies. In particular, 1.1.2 restores the second logical equipment slot and post-use swapping, but differs technically from the original physical-slot logic of 1.0.1.

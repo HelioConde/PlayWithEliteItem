@@ -1,32 +1,37 @@
-# PlayWithEliteItem 1.1.1 — roteiro de teste
+# Teste da versão 1.1.2 — PlayWithEliteItem
 
-Use a **DLL do GitHub Actions**, não a versão 1.0.1 publicada no Thunderstore.
+**Objetivo:** garantir que o elite **não caia ao pegar um equipamento** e que a rotação original volte a funcionar.
 
 ## Preparação
 
-1. Crie um perfil **novo** no r2modman; instale o BepInExPack completo com suas dependências e somente o `GiveEliteItem.dll` atualizado.
-2. Confirme que **não há duas versões** de `GiveEliteItem.dll` instaladas.
-3. Inicie o jogo uma vez. Após ver `PlayWithEliteItem 1.1.1 loaded.` no `LogOutput.log`, confira `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg` e mantenha o padrão.
-4. Se precisar investigar algum erro, altere `Diagnostics.VerboseLogging` para `true` e reinicie.
+- [ ] Crie um perfil separado no r2modman com BepInExPack e suas dependências.
+- [ ] Instale **somente a DLL 1.1.2** do último build verde do GitHub Actions. Retire qualquer cópia anterior.
+- [ ] Inicie com **Start modded** e confirme `PlayWithEliteItem 1.1.2 loaded` no `LogOutput.log`.
+- [ ] Se estiver investigando um problema, ative `Diagnostics.VerboseLogging=true` no arquivo de configuração e reinicie.
 
-Se ocorrer `Error loading ... Newtonsoft.Json, Version=12.0.0.0`, consulte [docs/TROUBLESHOOTING.md](TROUBLESHOOTING.md) antes de prosseguir.
+## Teste principal
 
-## Verificações no jogo
+1. Entre em uma partida solo com um sobrevivente de **um único equipamento** (por exemplo, Mercenário).
+2. Antes de coletar um equipamento, o servidor deve registrar `Reserved elite ... in logical slot 2`. O slot Q pode começar vazio — o elite está na reserva lógica.
+3. Pegue o Radar Escaneador ou outro equipamento utilizável.
+4. **Esperado:** o Radar ocupa o slot Q e o elite **não aparece no chão**.
+5. Ative o equipamento.
+6. **Esperado:** depois de 0,3 segundo, o elite passa ao slot ativo. O equipamento utilizado deve ficar na reserva do servidor.
 
-- [ ] **Solo:** um jogador recebe um equipamento de elite no slot ativo, com o efeito passivo esperado.
-- [ ] **Fase seguinte:** o equipamento não é concedido novamente e não é sobrescrito.
-- [ ] **Substituição:** ao pegar outro equipamento, o comportamento segue a mecânica normal do jogo; o bônus elite não fica permanentemente aplicado.
-- [ ] **Outra partida:** após voltar ao menu e iniciar uma run nova, o sorteio volta a acontecer.
-- [ ] **Multiplayer:** coloque a DLL **somente no host**, entre com um cliente sem o mod e confira a sincronização. *A compatibilidade ainda não foi confirmada.*
-- [ ] **Entrada tardia:** um cliente que entra durante a partida recebe um aspecto quando o inventário fica pronto.
-- [ ] **DLC desativada:** nenhum aspecto exclusivo de uma DLC desabilitada pode ser sorteado.
-- [ ] **Equipamento ocupado:** com `ReplaceExistingEquipment=false`, o equipamento existente não é substituído.
-- [ ] **Muitos jogadores:** quando o número de jogadores ultrapassa o de aspectos disponíveis, há repetições, sem travamentos.
+## Casos adicionais
 
-## Como relatar um problema
+- [ ] A partida seguinte recebe um elite diferente ou novo sorteio.
+- [ ] Nenhum item é duplicado ao tentar usar equipamentos repetidamente.
+- [ ] Com o elite ativo, pegar outro equipamento não o joga no chão; o equipamento normal pode ser substituído pela regra padrão.
+- [ ] Recargas e cargas são preservadas após uma troca.
+- [ ] Outros jogadores recebem reservas independentes.
+- [ ] Cliente sem mod vê o equipamento ativo sincronizado pelo host.
+- [ ] Personagens com slots/conjuntos especiais não sofrem alterações indevidas.
 
-Informe: versão do jogo; versão do BepInExPack; solo ou multiplayer; personagem; lista de mods do perfil; configurações alteradas; o que deveria acontecer; o que aconteceu.
+**Limitação conhecida:** alguns aspectos de elite não têm ação ativável, portanto a troca automática de volta para o Radar pode não ocorrer. Registre esse resultado, pois a prioridade é preservar a lógica original de alternância.
 
-Anexe o trecho relevante do `BepInEx/LogOutput.log` (remova dados pessoais antes de compartilhar).
+## Se falhar
 
-**Status de QA:** compilação e testes automatizados não substituem nenhuma das verificações acima. Não publicar no Thunderstore até concluir o teste real.
+Envie `BepInEx/LogOutput.log` após executar esses passos, dizendo: quem estava equipado, o que caiu no chão e em que momento. Não confunda erros antigos de `Newtonsoft.Json` com problemas novos do sistema de coleta.
+
+[Carregamento e bibliotecas faltando](TROUBLESHOOTING.md).

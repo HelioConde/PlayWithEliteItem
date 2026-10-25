@@ -77,12 +77,43 @@ internal static class Program
         Check(EliteEquipmentNames.Parse(" ,  , ").Count == 0, "blank config handled");
     }
 
+    private static void TestRotation()
+    {
+        Check(EliteRotationRules.ShouldRotate(true, true, false),
+            "successful equipment use should swap with reserve");
+        Check(!EliteRotationRules.ShouldRotate(false, true, false),
+            "failed activation must not swap");
+        Check(!EliteRotationRules.ShouldRotate(true, false, false),
+            "empty secondary slot must not swap");
+        Check(!EliteRotationRules.ShouldRotate(true, true, true),
+            "pending swap must not duplicate");
+
+        Check(EliteRotationRules.ShouldProtectElitePickup(true, false, true, true),
+            "elite in active slot must be protected during pickup");
+        Check(!EliteRotationRules.ShouldProtectElitePickup(true, false, false, true),
+            "normal active item uses vanilla pickup");
+        Check(!EliteRotationRules.ShouldProtectElitePickup(true, true, true, true),
+            "pending swap must not intercept pickup");
+        Check(!EliteRotationRules.ShouldProtectElitePickup(true, false, true, false),
+            "extra slot inventory remains vanilla");
+
+        Check(EliteRotationRules.CanCommitSwap(true, true, true, true),
+            "same run, master and equipment allows swap");
+        Check(!EliteRotationRules.CanCommitSwap(false, true, true, true),
+            "old run cannot commit");
+        Check(!EliteRotationRules.CanCommitSwap(true, false, true, true),
+            "another player's reserve cannot commit");
+        Check(!EliteRotationRules.CanCommitSwap(true, true, false, true),
+            "equipment changed during delay cannot commit");
+    }
+
     private static int Main()
     {
         try
         {
             TestDistribution();
             TestAllowlist();
+            TestRotation();
             Console.WriteLine("PASS: " + assertions + " assertions.");
             return 0;
         }

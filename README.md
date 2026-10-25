@@ -1,97 +1,68 @@
 # PlayWithEliteItem
 
-**Risk of Rain 2 · Random elite aspects · BepInEx · C#**
+**Risk of Rain 2 · Equipamento de elite no segundo slot · Server-side · C#**
 
-PlayWithEliteItem entrega um **equipamento de elite aleatório** para cada jogador elegível no início de uma partida. A distribuição acontece no **servidor/host**, usando o inventário original do jogo. Não adiciona HUD, comandos personalizados ou conteúdos novos.
+Mod de AlchemyFlame que dá a cada jogador um **aspecto de elite aleatório** e permite utilizar outro equipamento sem perder o elite. A técnica original do projeto troca equipamentos após o uso; a versão de teste **1.1.2 restaura essa mecânica** usando uma reserva lógica mantida no servidor, compatível com a ideia de não instalar interfaces nos clientes.
 
-[Thunderstore — versão pública](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar compilação de teste](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Como testar em português](docs/TESTE_NO_JOGO.md) · [Resolver erros de carregamento](docs/TROUBLESHOOTING.md)
+[Versão pública no Thunderstore](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar DLL de teste](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Roteiro de testes](docs/TESTE_NO_JOGO.md)
 
-> **Atenção:** a versão pública **1.0.1** no Thunderstore ainda é a implementação antiga. O código **1.1.1** do GitHub é uma refatoração com comportamento diferente, **ainda não validada dentro do jogo**. Não foi publicada uma nova versão no Thunderstore.
+> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.2. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
 
-## O que faz a versão 1.1.1
+## Como funciona
 
-- Distribui um aspecto de elite no **slot de equipamento 0** (slot utilizado pela implementação atual).
-- Usa o catálogo de equipamentos do RoR2; não cria itens ou aspectos novos.
-- Dá preferência a aspectos diferentes, permitindo repetição quando todos já foram distribuídos.
-- Respeita as expansões habilitadas na partida.
-- Inclui jogadores que entram depois do começo da partida.
-- Não substitui um equipamento já presente, salvo se a opção for ativada.
+1. Quando a partida começa, o servidor escolhe um aspecto elite para cada jogador e o guarda no **segundo slot lógico** (reserva). O slot ativo do jogo continua livre.
+2. Ao pegar um equipamento, como o **Radar Escaneador**, ele ocupa o slot ativo normalmente. O elite continua guardado em vez de cair no chão.
+3. Depois de **usar com sucesso** o equipamento ativo, o servidor aguarda **0,3 segundo** e troca o equipamento ativo pelo armazenado, preservando o estado de cargas e recarga.
+4. Se o elite estiver ativo quando o jogador coletar outro equipamento, o mod tenta guardar o elite novamente e deixa a coleta substituir o equipamento normal.
 
-**Limitação:** o bônus depende do equipamento elite permanecer equipado. Não é um buff permanente independente; substituir o equipamento pode remover o efeito.
+**Importante:** a reserva é **virtual, no servidor**, e não um segundo quadrado visível na HUD. Isso evita exigir alterações na interface de jogadores sem o mod. O aspecto elite só fornece o efeito passivo enquanto estiver realmente equipado no slot ativo.
 
-## Versões e dependências
+Não interceptamos inventários de múltiplos slots/conjuntos, como MUL-T e Functional Coupler, até validar sua compatibilidade. Equipamentos sem ação ativável podem impedir uma troca automática de volta, pois a mecânica é acionada pelo **uso bem-sucedido** do equipamento — comportamento que precisamos avaliar em jogo.
 
-| | Thunderstore | GitHub |
-| --- | --- | --- |
-| Versão | **1.0.1**, publicada | **1.1.1**, candidata a testes |
-| Mecânica | Segundo slot e troca do mod antigo | Aspecto no slot ativo |
-| Dependências | Pacote antigo com muitos módulos R2API | **1 dependência direta:** `bbepis-BepInExPack-5.4.2122` |
-| Disponibilidade | Instalação pública | DLL de teste gerada pelo GitHub Actions |
+## Instalação da versão de teste
 
-O BepInExPack instala suas próprias dependências transitivas. **Uma dependência direta não significa um único pacote instalado.** A versão atual do código não usa R2API.
+1. Instale [BepInExPack](https://thunderstore.io/c/riskofrain2/p/bbepis/BepInExPack/) **com as dependências** pelo r2modman. Execute o jogo com **Start modded**.
+2. No [GitHub Actions](https://github.com/HelioConde/PlayWithEliteItem/actions), abra a última execução **Build and test mod** aprovada.
+3. Baixe o artefato **PlayWithEliteItem**, extraia `GiveEliteItem.dll` e coloque-o em `BepInEx/plugins` do perfil ativo.
+4. Remova qualquer cópia da DLL 1.0.1/1.1.1 desse mesmo perfil e não use `Risk of Rain 2/Mods` para esse plugin.
+5. Inicie uma partida e teste pegar o Radar, usá-lo e observar a troca. Siga o [roteiro](docs/TESTE_NO_JOGO.md).
 
-## Instalar a versão de teste
-
-1. Crie um **perfil de teste separado** no r2modman/Thunderstore Mod Manager e instale o BepInExPack.
-2. Abra [GitHub Actions](https://github.com/HelioConde/PlayWithEliteItem/actions) e escolha a última execução **Build and test mod** com status verde.
-3. Baixe o artefato **PlayWithEliteItem**, extraia `GiveEliteItem.dll` e coloque-o em `BepInEx/plugins` do perfil de teste.
-4. **Não mantenha a DLL antiga da versão 1.0.1 no mesmo perfil.** Inicie o jogo e comece uma partida.
-
-**Se o arquivo de configuração não aparecer ou o log indicar falta de `Newtonsoft.Json 12.0.0.0`, veja o [diagnóstico de carregamento](docs/TROUBLESHOOTING.md).** Isso pode indicar uma instalação de BepInEx incompleta; não adicione DLLs de origem desconhecida.
-
-Para testar a nova distribuição, use primeiro uma partida solo sem outros mods de gameplay. Confira o roteiro em [docs/TESTE_NO_JOGO.md](docs/TESTE_NO_JOGO.md).
+Se o plugin nem carregar, veja o [diagnóstico de bibliotecas BepInEx](docs/TROUBLESHOOTING.md).
 
 ## Configuração
 
-O arquivo `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg` é gerado ao iniciar o jogo com o plugin.
+O BepInEx cria `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg` após carregar o mod.
 
-| Opção | Padrão | Efeito |
+| Configuração | Padrão | Significado |
 | --- | --- | --- |
-| `General.Enabled` | `true` | Liga/desliga a distribuição |
-| `Distribution.UniqueBeforeRepeats` | `true` | Evita repetições até esgotar os aspectos |
-| `Distribution.IncludeAllRegisteredEliteAspects` | `false` | Inclui aspectos extras/modificados do catálogo (avançado) |
-| `Distribution.AllowedEliteEquipment` | Sete elites clássicas | Lista de nomes internos separados por vírgula |
-| `Equipment.ReplaceExistingEquipment` | `false` | Autoriza substituir um equipamento existente |
-| `Diagnostics.VerboseLogging` | `false` | Registra detalhes no log do BepInEx |
+| `General.Enabled` | true | Ativa o mod |
+| `Distribution.UniqueBeforeRepeats` | true | Evita repetir aspectos até esgotar opções |
+| `Distribution.IncludeAllRegisteredEliteAspects` | false | Inclui aspectos extras registrados |
+| `Distribution.AllowedEliteEquipment` | Sete elites clássicas | Nomes internos separados por vírgula |
+| `Switching.AutomaticSwapAfterUse` | true | Habilita a troca automática |
+| `Switching.SwapDelaySeconds` | 0.3 | Atraso da troca, de 0 a 2 segundos |
+| `Diagnostics.VerboseLogging` | false | Registra detalhes do sistema |
 
-Os sete nomes padrão: `EliteEarthEquipment`, `EliteFireEquipment`, `EliteHauntedEquipment`, `EliteIceEquipment`, `EliteLightningEquipment`, `EliteLunarEquipment`, `ElitePoisonEquipment`.
+O antigo parâmetro `Equipment.ReplaceExistingEquipment` deixou de ser necessário: o elite não ocupa o slot ativo no início. Configurações antigas podem continuar no arquivo CFG, mas não serão utilizadas.
 
-## Desenvolver
+## Dependências
 
-Requisito: **.NET SDK 8**.
+**Direta:** apenas `bbepis-BepInExPack-5.4.2122`. Seus requisitos transitivos são instalados pelo gerenciador. O projeto não utiliza R2API nem adiciona conteúdo ou RPCs. O projeto de compilação usa `MMHOOK.RoR2` para declarar os hooks no C#, sem exigir R2API como dependência direta.
+
+## Código e testes
 
 ```bash
 dotnet restore GiveEliteItem.sln
 dotnet build GiveEliteItem.sln -c Release --no-restore
 dotnet run --project tests/PlayWithEliteItem.LogicTests/PlayWithEliteItem.LogicTests.csproj -c Release
-python scripts/validate_manifest.py
 ```
 
-**Organização do projeto:**
+O plugin é organizado em entrada (`GiveEliteItem.cs`), configurações (`EliteSettings.cs`), catálogo (`EliteAspectCatalog.cs`), seleção (`AspectSelection.cs`) e **distribuição/troca** (`EliteRunDistributor.cs`). `EliteRotationRules.cs` testa as decisões de troca e proteção de coleta.
 
-```text
-GiveEliteItem/
-  GiveEliteItem.cs         Entrada do plugin e ciclo de vida
-  EliteSettings.cs         Configurações BepInEx
-  EliteRunDistributor.cs   Jogadores, sorteio por partida e inventário
-  EliteAspectCatalog.cs    Filtro de elites e DLCs habilitadas
-  EliteEquipmentNames.cs   Leitura da lista configurada de elites
-  AspectSelection.cs      Sorteio independente do jogo
-tests/                     Testes da lógica de distribuição
-scripts/                   Validação e montagem do pacote Thunderstore
-thunderstore/              Manifesto e changelog da próxima publicação
-docs/                      Testes manuais e orientações de publicação
-.github/workflows/         Compilação, testes e ZIP candidato
-```
+**Ainda falta testar de verdade:** carregamento, coleta sem drop do elite, troca após uso, buffs, jogador que entra depois, recargas, multiplayer server-side e situações com vários equipamentos. O CI compila e executa testes de lógica, mas não executa o jogo.
 
-O GitHub Actions verifica a compilação, executa testes da lógica e produz uma DLL e um ZIP **candidato**, sem publicar no Thunderstore. [Preparar publicação](docs/THUNDERSTORE_RELEASE.md).
+## Publicação
 
-## Antes de publicar
+[Preparação do pacote Thunderstore](docs/THUNDERSTORE_RELEASE.md). **Nenhuma versão nova foi enviada ao Thunderstore.**
 
-**Pendente:** comprovar efeitos, coleta/equipamento, mudanças de fase e multiplayer real com clientes sem o mod. Uma compilação aprovada **não comprova** que a mecânica funciona na partida.
-
-Abra um [issue](https://github.com/HelioConde/PlayWithEliteItem/issues) com logs e passos de reprodução caso encontre problemas.
-
----
-
-**Autoria:** AlchemyFlame · Licença [MIT](LICENSE) · Projeto não oficial de *Risk of Rain 2*.
+Licença [MIT](LICENSE) · AlchemyFlame · Mod não oficial de Risk of Rain 2.
