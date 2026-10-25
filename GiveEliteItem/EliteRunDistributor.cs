@@ -39,6 +39,9 @@ namespace GiveEliteItem
         private float nextScanTime;
         private bool emptyPoolLogged;
         private int runGeneration;
+        private readonly HashSet<CharacterMaster> reportedUnsupportedPlayers =
+            new HashSet<CharacterMaster>();
+        private bool waitingForPlayersLogged;
 
         internal EliteRunDistributor(
             GiveEliteItem plugin, EliteSettings settings, ManualLogSource logger)
@@ -93,12 +96,15 @@ namespace GiveEliteItem
                 }
 
                 emptyPoolLogged = false;
-                logger.LogInfo("Eligible elite aspects: " + availableAspects.Count + ".");
+                logger.LogInfo("Eligible elite aspects: " + availableAspects.Count +
+                    " (auto-discovery=" + settings.IncludeAllRegisteredEliteAspects.Value + ").");
             }
 
+            int candidateControllers = 0;
             foreach (PlayerCharacterMasterController controller in
                 PlayerCharacterMasterController.instances)
             {
+                candidateControllers++;
                 if (controller == null || controller.master == null ||
                     controller.networkUser == null || controller.master.inventory == null)
                     continue;
@@ -108,6 +114,18 @@ namespace GiveEliteItem
                     continue;
 
                 Inventory inventory = master.inventory;
+                if (!IsSingleEquipmentLocation(inventory))
+                {
+                    if (reportedUnsupportedPlayers.Add(master))
+                    {
+                        logger.LogWarning("Skipping elite assignment for " +
+                            controller.networkUser.userName +
+                            ": equipmentSlotCount=" + inventory.equipmentSlotCount +
+                            ", equipmentSetCount=" + inventory.equipmentSetCount +
+                            ". The extra equipment location must be checked for this survivor.");
+                    }
+                    continue;
+                }
 
                 // Wait until the playable body is actually present. Giving equipment
                 // before character initialization can cause the grant to be overwritten.
@@ -151,6 +169,12 @@ namespace GiveEliteItem
                 EquipmentDef definition = EquipmentCatalog.GetEquipmentDef(elite);
                 logger.LogInfo("Equipped STARTING elite " + definition.name + " for " +
                     controller.networkUser.userName + " in the active equipment slot.");
+            }
+
+            if (candidateControllers == 0 && !waitingForPlayersLogged)
+            {
+                waitingForPlayersLogged = true;
+                logger.LogWarning("Run is active, but no PlayerCharacterMasterController is registered yet.");
             }
         }
 
@@ -319,6 +343,8 @@ namespace GiveEliteItem
             random = null;
             nextScanTime = 0f;
             emptyPoolLogged = false;
+            waitingForPlayersLogged = false;
+            reportedUnsupportedPlayers.Clear();
             players.Clear();
             assignedAspects.Clear();
             availableAspects.Clear();

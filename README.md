@@ -2,11 +2,11 @@
 
 **Risk of Rain 2 · Equipamento de elite no segundo slot · Server-side · C#**
 
-Mod de AlchemyFlame que dá a cada jogador um **aspecto de elite aleatório equipado ao nascer**. Ao pegar outro equipamento, ele fica ativo e o elite vai para uma reserva lógica do servidor, evitando que caia no chão. A versão de teste **1.1.3** corrige a inicialização invisível da versão anterior.
+Mod de AlchemyFlame que dá a cada jogador um **aspecto de elite aleatório equipado ao nascer**. Ao pegar outro equipamento, ele fica ativo e o elite vai para uma reserva lógica do servidor, evitando que caia no chão. A versão de teste **1.1.4** incorpora diagnósticos de inicialização para descobrir por que o aspecto às vezes não aparece ao nascer.
 
 [Versão pública no Thunderstore](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar DLL de teste](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Roteiro de testes](docs/TESTE_NO_JOGO.md)
 
-> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.3. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
+> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.4. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
 
 ## Como funciona
 
@@ -27,7 +27,7 @@ Não interceptamos inventários de múltiplos slots/conjuntos, como MUL-T e Func
 4. Remova qualquer cópia da DLL 1.0.1/1.1.1 desse mesmo perfil e não use `Risk of Rain 2/Mods` para esse plugin.
 5. Inicie uma partida e teste pegar o Radar, usá-lo e observar a troca. Siga o [roteiro](docs/TESTE_NO_JOGO.md).
 
-Se o plugin nem carregar, veja o [diagnóstico de bibliotecas BepInEx](docs/TROUBLESHOOTING.md).
+Se o plugin nem carregar, veja o [diagnóstico de bibliotecas BepInEx](docs/TROUBLESHOOTING.md). Se ele carregar mas o Q continuar vazio, verifique no `BepInEx/LogOutput.log` as mensagens `Eligible elite aspects`, `Skipping elite assignment`, `Equipped STARTING elite` e `No eligible elite aspects`.
 
 ## Configuração
 

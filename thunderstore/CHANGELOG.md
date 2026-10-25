@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.4 — Diagnostic build (not published)
+
+- Treat the configured classic elite equipment names as an explicit allowlist.
+- Resolve classic aspects directly by their EquipmentCatalog internal name, without depending on the isElite flag being initialized first.
+- Log why a player is skipped due to unsupported equipment slot/set counts.
+- Log when there are no player controllers registered in an active run.
+- No changes to the server-side/no-HUD requirement.
+- Still requires testing the spawn grant and equipment exchange in-game.
+
+# Changelog
+
 ## 1.1.3 — Test candidate (not published)
 
 - Fix: equip the elite aspect in the normal active equipment slot when the player spawns.
