@@ -1,0 +1,9 @@
+{
+  "name": "PlayWithEliteItem",
+  "version_number": "1.1.1",
+  "website_url": "https://github.com/HelioConde/PlayWithEliteItem",
+  "description": "Distribui um equipamento de elite aleatorio para cada jogador no inicio da partida. Mod server-side.",
+  "dependencies": [
+    "bbepis-BepInExPack-5.4.2122"
+  ]
+}

@@ -12,15 +12,25 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+      - name: Validate Thunderstore manifest (no R2API)
+        run: python3 scripts/validate_manifest.py
       - name: Restore game plugin dependencies
         run: dotnet restore GiveEliteItem.sln
       - name: Build game plugin
         run: dotnet build GiveEliteItem.sln --configuration Release --no-restore
       - name: Run deterministic distribution tests
         run: dotnet run --project tests/PlayWithEliteItem.LogicTests/PlayWithEliteItem.LogicTests.csproj --configuration Release
+      - name: Build unpublished Thunderstore candidate
+        run: python3 scripts/package_thunderstore.py
       - name: Save compiled plugin
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: PlayWithEliteItem
           path: GiveEliteItem/bin/Release/netstandard2.1/GiveEliteItem.dll
+      - name: Save candidate for manual testing only
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlayWithEliteItem-Thunderstore-candidate
+          path: dist/*-candidate.zip
