@@ -6,10 +6,9 @@
     <RestoreAdditionalProjectSources>https://api.nuget.org/v3/index.json;https://nuget.bepinex.dev/v3/index.json</RestoreAdditionalProjectSources>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
-    <PackageReference Include="UnityEngine.Modules" Version="2021.3.33" IncludeAssets="compile" />
-    <PackageReference Include="RiskOfRain2.GameLibs" Version="1.4.1-r.0" />
-    <!-- Only required at BUILD TIME for On.RoR2 hook declarations. -->
+    <!-- References for the current Risk of Rain 2 equipment location API. -->
+    <PackageReference Include="RoR2BepInExPack" Version="1.48.0" />
+    <!-- Compile-time On.RoR2 hook declarations; BepInExPack handles runtime hooks. -->
     <PackageReference Include="MMHOOK.RoR2" Version="*" NoWarn="NU1701" />
   </ItemGroup>
 </Project>
