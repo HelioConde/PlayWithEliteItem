@@ -29,7 +29,7 @@ This is a **community mod**, not an official Risk of Rain 2 feature.
 | **Version** | **1.0.1** | **1.1.1** |
 | **Status** | Distributed publicly | Build and regression checks; in-game validation pending |
 | **Equipment behavior** | Original second-slot implementation described in the published listing | Uses the active equipment slot (index `0`) so the elite passive buff can apply |
-| **How to get it** | [Thunderstore package](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) | [GitHub Actions artifact](../../actions), or compile the source |
+| **How to get it** | [Thunderstore package](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) | [GitHub Actions artifact](https://github.com/HelioConde/PlayWithEliteItem/actions), or compile the source |
 
 The Thunderstore page displayed **approximately 4,000 downloads** in October 2026. This is a dated milestone, not a live counter.
 
@@ -59,7 +59,7 @@ This installs **1.0.1**, which may not match the behavior of the latest source s
 
 ### Option B — test the current GitHub source (for developers)
 
-1. Open [Actions](../../actions) and choose a successful **Build and test mod** run.
+1. Open [Actions](https://github.com/HelioConde/PlayWithEliteItem/actions) and choose a successful **Build and test mod** run.
 2. Download the **PlayWithEliteItem** artifact and extract `GiveEliteItem.dll`.
 3. Copy the file into your game's `BepInEx/plugins` folder.
 4. Start the game, then configure `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg`.
@@ -121,7 +121,7 @@ In-game verification is still needed for:
 - [ ] Disabled DLC and modded aspects: only valid aspects are assigned.
 - [ ] Compatibility with current BepInEx, Risk of Rain 2 and other installed mods.
 
-Issues and reproduction steps are welcome through [GitHub Issues](../../issues).
+Issues and reproduction steps are welcome through [GitHub Issues](https://github.com/HelioConde/PlayWithEliteItem/issues).
 
 ## 📜 Credits and license
 
