@@ -1,20 +1,20 @@
 # Changelog
 
-## 1.1.2 — Test candidate (not published)
+## 1.1.3 — Test candidate (not published)
 
-- **Restored the original two-equipment mechanic**: elite aspects are placed in a server-side virtual second slot, not the active slot.
-- Picking up a normal equipment no longer ejects the initial elite aspect.
-- Successful equipment use rotates between active and reserved equipment after 0.3 seconds.
-- Preserves charges and cooldown through full EquipmentState swaps.
-- Protects the elite from being dropped if a pickup happens while the elite is active.
-- All inventory mutations run on the server; no new HUD or custom networking.
-- Added regression tests for equipment switching and pickup protection.
-- Excludes special multi-slot/multi-set inventories (MUL-T, Functional Coupler) pending game testing.
+- Fix: equip the elite aspect in the normal active equipment slot when the player spawns.
+- Wait for the character body to exist before granting, and verify that the inventory changed.
+- Fix: protect the **first** ordinary equipment pickup when the virtual reserve is empty.
+- Preserve the elite aspect in the server-side virtual second slot when another equipment is collected.
+- Preserve any initial equipment from other mods in reserve.
+- Add test cases covering spawn grants and the initially empty reserve.
+- No custom HUD, inputs or client RPCs; still requires live in-game testing.
 
-## 1.1.1 — GitHub refactor (not published)
+## 1.1.2 — GitHub test candidate
 
-- Modernized initial random elite assignment and removed obsolete R2API usage.
+- Introduced virtual second equipment reserve and post-use rotation.
+- Server-authoritative inventory mutation, no R2API dependency.
 
 ## 1.0.1 — Published Thunderstore version
 
-- Original second-slot equipment swap implementation.
+- Original dual-equipment swap.

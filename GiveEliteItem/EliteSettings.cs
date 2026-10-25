@@ -21,7 +21,7 @@ namespace GiveEliteItem
         {
             Enabled = config.Bind(
                 "General", "Enabled", true,
-                "Grant each player an elite aspect in a virtual second equipment slot.");
+                "Equip a random elite aspect at spawn, preserving it in a virtual second slot on pickup.");
 
             UniqueBeforeRepeats = config.Bind(
                 "Distribution", "UniqueBeforeRepeats", true,

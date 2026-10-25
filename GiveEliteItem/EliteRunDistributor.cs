@@ -9,9 +9,10 @@ using UnityEngine.Networking;
 namespace GiveEliteItem
 {
     /// <summary>
-    /// The elite aspect is a second LOGICAL equipment slot stored exclusively on
-    /// the server. An ordinary pickup stays in the real active slot.
-    /// All visible inventory updates use the game's built-in replication.
+    /// Equip the starting elite in the normal active slot so the player can
+    /// actually see/use its passive. When another equipment is collected, move
+    /// the elite into a virtual server-side reserve without ejecting it.
+    /// Only the active state is synchronized through vanilla inventory replication.
     /// </summary>
     internal sealed class EliteRunDistributor
     {
@@ -108,31 +109,48 @@ namespace GiveEliteItem
 
                 Inventory inventory = master.inventory;
 
-                // MUL-T / Functional Coupler have their own real slots/sets;
-                // leave them unmodified until those mechanics have been tested.
-                if (!IsSingleEquipmentLocation(inventory))
+                // Wait until the playable body is actually present. Giving equipment
+                // before character initialization can cause the grant to be overwritten.
+                CharacterBody body = master.GetBody();
+                if (!EliteRotationRules.ShouldGrantAtSpawn(
+                    body != null && body.inventory != null,
+                    IsSingleEquipmentLocation(inventory),
+                    players.ContainsKey(master)))
                     continue;
 
                 int chosen = AspectSelection.Choose(
                     availableAspects, assignedAspects, random,
                     settings.UniqueBeforeRepeats.Value);
                 EquipmentIndex elite = (EquipmentIndex)chosen;
+
+                EquipmentLocation location = inventory.activeEquipmentLocation;
+                EquipmentState previous = inventory.GetEquipment(location);
                 var state = new PlayerEquipment
                 {
                     EliteIndex = elite,
-                    Reserve = new EquipmentState(
-                        elite, Run.FixedTimeStamp.positiveInfinity, 1, false),
-                    HasReserve = true
+                    // Preserve equipment supplied by another mod, rather than
+                    // silently deleting it when the elite is equipped.
+                    Reserve = previous,
+                    HasReserve = previous.equipmentIndex != EquipmentIndex.None
                 };
+
+                // The elite must be ACTIVE on spawn to show in Q and grant its buff.
+                inventory.SetEquipment(
+                    new EquipmentState(elite, Run.FixedTimeStamp.positiveInfinity, 1, false),
+                    location.slot, location.set);
+
+                if (inventory.GetEquipment(location).equipmentIndex != elite)
+                {
+                    logger.LogWarning("Failed to equip starting elite for " +
+                        controller.networkUser.userName + "; will retry.");
+                    continue;
+                }
 
                 players.Add(master, state);
                 assignedAspects.Add(chosen);
                 EquipmentDef definition = EquipmentCatalog.GetEquipmentDef(elite);
-                logger.LogInfo("Reserved elite " + definition.name + " for " +
-                    controller.networkUser.userName + " in logical slot 2.");
-
-                // Deliberately DO NOT write elite into slot 0. A new equipment pickup
-                // can now enter slot 0 normally, without dropping the elite aspect.
+                logger.LogInfo("Equipped STARTING elite " + definition.name + " for " +
+                    controller.networkUser.userName + " in the active equipment slot.");
             }
         }
 
@@ -230,7 +248,7 @@ namespace GiveEliteItem
             EquipmentState active = inventory.GetEquipment(location);
 
             if (!EliteRotationRules.ShouldProtectElitePickup(
-                state.HasReserve, state.SwapPending,
+                state.SwapPending,
                 active.equipmentIndex == state.EliteIndex,
                 true))
             {
@@ -238,11 +256,23 @@ namespace GiveEliteItem
                 return;
             }
 
-            // The elite is active and the previous normal equipment is stored
-            // in our virtual reserve. Place the normal equipment into the real
-            // slot so vanilla can replace/drop it instead of dropping the elite.
+            // The elite is ACTIVE at spawn. Before vanilla processes a pickup,
+            // temporarily show a saved ordinary equipment (if any) or an empty
+            // slot. This prevents vanilla from ejecting the elite onto the ground.
             EquipmentState oldReserve = state.Reserve;
-            inventory.SetEquipment(oldReserve, location.slot, location.set);
+            bool hadReserve = state.HasReserve;
+            EquipmentState replacement = hadReserve
+                ? oldReserve
+                : new EquipmentState(
+                    EquipmentIndex.None, Run.FixedTimeStamp.positiveInfinity, 0, false);
+            inventory.SetEquipment(replacement, location.slot, location.set);
+
+            if (inventory.GetEquipment(location).equipmentIndex != replacement.equipmentIndex)
+            {
+                logger.LogWarning("Could not prepare pickup without dropping the elite.");
+                inventory.SetEquipment(active, location.slot, location.set);
+                return;
+            }
 
             try
             {
@@ -253,24 +283,24 @@ namespace GiveEliteItem
                 EquipmentState result = inventory.GetEquipment(location);
                 if (result.equipmentIndex == pickup.equipmentIndex)
                 {
-                    // Pickup succeeded; the prior normal equipment was replaced
-                    // by vanilla. Keep the elite safely in the virtual second slot.
+                    // A new ordinary item was acquired. The elite becomes the
+                    // second logical equipment, regardless of prior reserve.
                     state.Reserve = active;
                     state.HasReserve = true;
 
                     if (settings.VerboseLogging.Value)
-                        logger.LogInfo("Protected elite aspect from world pickup.");
+                        logger.LogInfo("Elite kept in logical slot 2 after pickup.");
                 }
                 else
                 {
-                    // Pickup denied: restore both pieces and do not duplicate items.
+                    // Pickup was denied: keep both equipment states as they were.
                     state.Reserve = oldReserve;
-                    state.HasReserve = oldReserve.equipmentIndex != EquipmentIndex.None;
-                    if (result.equipmentIndex == oldReserve.equipmentIndex)
+                    state.HasReserve = hadReserve;
+                    if (result.equipmentIndex == replacement.equipmentIndex)
                         inventory.SetEquipment(active, location.slot, location.set);
                     else
                         logger.LogWarning(
-                            "Unexpected pickup result; cannot restore the prior equipment safely.");
+                            "Unexpected pickup result; inventory modified externally.");
                 }
             }
         }

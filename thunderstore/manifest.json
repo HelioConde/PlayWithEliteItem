@@ -1,8 +1,8 @@
 {
   "name": "PlayWithEliteItem",
-  "version_number": "1.1.2",
+  "version_number": "1.1.3",
   "website_url": "https://github.com/HelioConde/PlayWithEliteItem",
-  "description": "Concede um aspecto elite aleatorio no segundo slot logico e alterna automaticamente os equipamentos apos o uso. Server-side.",
+  "description": "Concede um elite equipado no inicio e o guarda no segundo slot logico apos coletar outro equipamento. Server-side.",
   "dependencies": [
     "bbepis-BepInExPack-5.4.2122"
   ]

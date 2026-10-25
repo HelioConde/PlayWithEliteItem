@@ -1,37 +1,25 @@
-# Teste da versão 1.1.2 — PlayWithEliteItem
+# PlayWithEliteItem 1.1.3 — teste no Risk of Rain 2
 
-**Objetivo:** garantir que o elite **não caia ao pegar um equipamento** e que a rotação original volte a funcionar.
+A versão **1.1.2** armazenava o elite numa reserva invisível ao nascer. A **1.1.3** deve mostrar o elite no slot Q desde o início.
 
 ## Preparação
 
-- [ ] Crie um perfil separado no r2modman com BepInExPack e suas dependências.
-- [ ] Instale **somente a DLL 1.1.2** do último build verde do GitHub Actions. Retire qualquer cópia anterior.
-- [ ] Inicie com **Start modded** e confirme `PlayWithEliteItem 1.1.2 loaded` no `LogOutput.log`.
-- [ ] Se estiver investigando um problema, ative `Diagnostics.VerboseLogging=true` no arquivo de configuração e reinicie.
+1. Use um perfil com BepInExPack completo e somente o `GiveEliteItem.dll` mais recente.
+2. Baixe a DLL do GitHub Actions da versão **1.1.3**.
+3. Inicie pelo gerenciador e confirme `PlayWithEliteItem 1.1.3 loaded` no `BepInEx/LogOutput.log`.
+4. Opcional: ajuste `Diagnostics.VerboseLogging=true` e reinicie para investigar trocas.
 
 ## Teste principal
 
-1. Entre em uma partida solo com um sobrevivente de **um único equipamento** (por exemplo, Mercenário).
-2. Antes de coletar um equipamento, o servidor deve registrar `Reserved elite ... in logical slot 2`. O slot Q pode começar vazio — o elite está na reserva lógica.
-3. Pegue o Radar Escaneador ou outro equipamento utilizável.
-4. **Esperado:** o Radar ocupa o slot Q e o elite **não aparece no chão**.
-5. Ative o equipamento.
-6. **Esperado:** depois de 0,3 segundo, o elite passa ao slot ativo. O equipamento utilizado deve ficar na reserva do servidor.
+- [ ] Entre numa partida solo com Mercenário ou outro personagem de um slot de equipamento.
+- [ ] **Imediatamente ao nascer, o elite aparece no Q e o buff/efeito de elite é aplicado.**
+- [ ] O log contém `Equipped STARTING elite ... in the active equipment slot.`
+- [ ] Pegue o Radar Escaneador (ou outro equipamento). Ele deve substituir o elite no Q.
+- [ ] **O elite não deve cair no chão:** deve estar protegido na segunda reserva lógica.
+- [ ] Use o Radar. Após 0,3 segundo, o elite deve voltar ao Q, e o Radar ficará guardado.
+- [ ] Verifique que não existem duplicações ou perdas de equipamentos ao coletar outros itens.
+- [ ] Confirme recargas, mudança de fase, respawn, multiplayer com cliente vanilla e entrada tardia.
 
-## Casos adicionais
+**Limitação atual:** elites em geral não têm ativação; após trocar do Radar para o elite, uma segunda ativação para voltar ao Radar pode não ser possível. Vamos tratar este caso separadamente.
 
-- [ ] A partida seguinte recebe um elite diferente ou novo sorteio.
-- [ ] Nenhum item é duplicado ao tentar usar equipamentos repetidamente.
-- [ ] Com o elite ativo, pegar outro equipamento não o joga no chão; o equipamento normal pode ser substituído pela regra padrão.
-- [ ] Recargas e cargas são preservadas após uma troca.
-- [ ] Outros jogadores recebem reservas independentes.
-- [ ] Cliente sem mod vê o equipamento ativo sincronizado pelo host.
-- [ ] Personagens com slots/conjuntos especiais não sofrem alterações indevidas.
-
-**Limitação conhecida:** alguns aspectos de elite não têm ação ativável, portanto a troca automática de volta para o Radar pode não ocorrer. Registre esse resultado, pois a prioridade é preservar a lógica original de alternância.
-
-## Se falhar
-
-Envie `BepInEx/LogOutput.log` após executar esses passos, dizendo: quem estava equipado, o que caiu no chão e em que momento. Não confunda erros antigos de `Newtonsoft.Json` com problemas novos do sistema de coleta.
-
-[Carregamento e bibliotecas faltando](TROUBLESHOOTING.md).
+Se o Q continuar vazio após o spawn, envie o log após iniciar a partida. Procure `No eligible elite aspects` ou `Failed to equip starting elite`; isso ajudará a diferenciar catálogo e inventário de um problema de carregamento.

@@ -2,22 +2,22 @@
 
 **Risk of Rain 2 · Equipamento de elite no segundo slot · Server-side · C#**
 
-Mod de AlchemyFlame que dá a cada jogador um **aspecto de elite aleatório** e permite utilizar outro equipamento sem perder o elite. A técnica original do projeto troca equipamentos após o uso; a versão de teste **1.1.2 restaura essa mecânica** usando uma reserva lógica mantida no servidor, compatível com a ideia de não instalar interfaces nos clientes.
+Mod de AlchemyFlame que dá a cada jogador um **aspecto de elite aleatório equipado ao nascer**. Ao pegar outro equipamento, ele fica ativo e o elite vai para uma reserva lógica do servidor, evitando que caia no chão. A versão de teste **1.1.3** corrige a inicialização invisível da versão anterior.
 
 [Versão pública no Thunderstore](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar DLL de teste](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Roteiro de testes](docs/TESTE_NO_JOGO.md)
 
-> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.2. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
+> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.3. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
 
 ## Como funciona
 
-1. Quando a partida começa, o servidor escolhe um aspecto elite para cada jogador e o guarda no **segundo slot lógico** (reserva). O slot ativo do jogo continua livre.
-2. Ao pegar um equipamento, como o **Radar Escaneador**, ele ocupa o slot ativo normalmente. O elite continua guardado em vez de cair no chão.
+1. Quando o personagem aparece no mapa, o servidor escolhe e equipa um aspecto elite **no slot ativo Q**. O ícone elite deve aparecer imediatamente, com seu efeito passivo.
+2. Ao pegar um equipamento, como o **Radar Escaneador**, o novo equipamento ocupa o Q e o elite vai para o **segundo slot lógico** (reserva). **O elite não deve cair no chão.**
 3. Depois de **usar com sucesso** o equipamento ativo, o servidor aguarda **0,3 segundo** e troca o equipamento ativo pelo armazenado, preservando o estado de cargas e recarga.
 4. Se o elite estiver ativo quando o jogador coletar outro equipamento, o mod tenta guardar o elite novamente e deixa a coleta substituir o equipamento normal.
 
-**Importante:** a reserva é **virtual, no servidor**, e não um segundo quadrado visível na HUD. Isso evita exigir alterações na interface de jogadores sem o mod. O aspecto elite só fornece o efeito passivo enquanto estiver realmente equipado no slot ativo.
+**Importante:** a reserva é **virtual, no servidor**, não um segundo quadrado visível na HUD. O elite deve aparecer no Q ao nascer. Depois de coletar outro equipamento, ficará guardado (e seu efeito passivo **não ficará ativo** enquanto estiver na reserva).
 
-Não interceptamos inventários de múltiplos slots/conjuntos, como MUL-T e Functional Coupler, até validar sua compatibilidade. Equipamentos sem ação ativável podem impedir uma troca automática de volta, pois a mecânica é acionada pelo **uso bem-sucedido** do equipamento — comportamento que precisamos avaliar em jogo.
+Não interceptamos inventários de múltiplos slots/conjuntos, como MUL-T e Functional Coupler, até validar sua compatibilidade. Aspectos elite em geral **não podem ser ativados**. Como a troca ainda depende de um uso bem-sucedido, um elite que volte ao slot ativo pode impedir que o Radar seja recuperado por ativação. Esta é uma **limitação conhecida ainda pendente de solução**.
 
 ## Instalação da versão de teste
 
@@ -43,7 +43,7 @@ O BepInEx cria `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg` após carrega
 | `Switching.SwapDelaySeconds` | 0.3 | Atraso da troca, de 0 a 2 segundos |
 | `Diagnostics.VerboseLogging` | false | Registra detalhes do sistema |
 
-O antigo parâmetro `Equipment.ReplaceExistingEquipment` deixou de ser necessário: o elite não ocupa o slot ativo no início. Configurações antigas podem continuar no arquivo CFG, mas não serão utilizadas.
+O antigo parâmetro `Equipment.ReplaceExistingEquipment` não é mais utilizado. Configurações antigas podem continuar no CFG. Caso outro mod forneça equipamento no início, ele será preservado na reserva antes de equipar o elite.
 
 ## Dependências
 
