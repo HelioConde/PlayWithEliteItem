@@ -1,19 +1,30 @@
-# PlayWithEliteItem — Risk of Rain 2 Mod
+<div align="center">
 
-**Mod publicado no Thunderstore por CONDE (AlchemyFlame).**
+# PlayWithEliteItem · Risk of Rain 2
 
-[🎮 Versão pública no Thunderstore](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [💻 Repositório no GitHub](https://github.com/HelioConde/PlayWithEliteItem)
+**Random elite aspects at the start of a run — a mod shared with the Risk of Rain 2 community.**
 
-| Canal | Versão | Situação |
+[![Thunderstore](https://img.shields.io/badge/THUNDERSTORE-PUBLISHED-18b981?style=for-the-badge)](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/)
+[![C#](https://img.shields.io/badge/C%23-.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://github.com/HelioConde/PlayWithEliteItem)
+[![License](https://img.shields.io/badge/LICENSE-MIT-334155?style=for-the-badge)](LICENSE)
+
+[**🎮 Install the published mod**](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [**🧑‍💻 Explore the source**](https://github.com/HelioConde/PlayWithEliteItem) · [**⚙️ Build workflows**](.github/workflows/build.yml)
+
+</div>
+
+## 📦 Published mod vs. current source
+
+| | **Thunderstore package** | **GitHub source** |
 | --- | --- | --- |
-| **Thunderstore** | **1.0.1** | Versão pública anterior: sorteia um aspecto para o segundo slot de equipamento |
-| **GitHub (main)** | **1.1.1** | Fonte modernizada, compilada e com testes de lógica aprovados; ainda não verificada dentro do jogo |
+| **Version** | **1.0.1** | **1.1.1** |
+| **Availability** | Released for community downloads | Modernized code, awaiting manual in-game validation |
+| **Purpose** | Original automatic elite equipment distribution | Server-authoritative grants, configuration, tests and broader catalogue support |
 
-> **Atenção:** baixar pelo Thunderstore instala a versão publicada **1.0.1**, não o código **1.1.1** descrito abaixo. Para testar a nova versão, utilize a DLL produzida pelo workflow do GitHub Actions. Não publique no Thunderstore antes dos testes manuais em solo e multiplayer.
+The published package had **approximately 4,000 downloads** as shown on Thunderstore in October 2026. Downloads are a historical snapshot, not a live count.
 
-**Risk of Rain 2 mod (BepInEx, C#)** — each player starts a run with one randomly chosen *elite aspect* equipped.
+> **Important:** the installation instructions and feature list below refer to the **modernized GitHub 1.1.1 source**, not necessarily to the **Thunderstore 1.0.1** build. The new implementation has automated checks, but in-game and multiplayer compatibility must still be tested before a release.
 
-> Version **1.1.1**. GitHub Actions builds the plugin and runs regression tests, but a live Risk of Rain 2 test (especially multiplayer) is still necessary.
+---
 
 ## Features
 
