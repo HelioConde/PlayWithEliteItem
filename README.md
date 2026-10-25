@@ -1,15 +1,12 @@
 <div align="center">
-
-# PlayWithEliteItem · Risk of Rain 2
-
-**Random elite aspects at the start of a run — a mod shared with the Risk of Rain 2 community.**
-
-[![Thunderstore](https://img.shields.io/badge/THUNDERSTORE-PUBLISHED-18b981?style=for-the-badge)](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/)
-[![C#](https://img.shields.io/badge/C%23-.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://github.com/HelioConde/PlayWithEliteItem)
-[![License](https://img.shields.io/badge/LICENSE-MIT-334155?style=for-the-badge)](LICENSE)
-
-[**🎮 Install the published mod**](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [**🧑‍💻 Explore the source**](https://github.com/HelioConde/PlayWithEliteItem) · [**⚙️ Build workflows**](.github/workflows/build.yml)
-
+  <h1>PlayWithEliteItem · Risk of Rain 2</h1>
+  <p><strong>Random elite aspects at the start of a run — a mod shared with the Risk of Rain 2 community.</strong></p>
+  <p>
+    <a href="https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/"><img src="https://img.shields.io/badge/THUNDERSTORE-PUBLISHED-18b981?style=for-the-badge" alt="Published on Thunderstore"></a>
+    <a href="https://github.com/HelioConde/PlayWithEliteItem"><img src="https://img.shields.io/badge/C%23-.NET-512BD4?style=for-the-badge&amp;logo=dotnet&amp;logoColor=white" alt="C# and .NET"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/LICENSE-MIT-334155?style=for-the-badge" alt="MIT License"></a>
+  </p>
+  <p><a href="https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/">🎮 Install the published mod</a> · <a href="https://github.com/HelioConde/PlayWithEliteItem">💻 Explore the source</a> · <a href=".github/workflows/build.yml">⚙️ Build workflows</a></p>
 </div>
 
 ## 📦 Published mod vs. current source
