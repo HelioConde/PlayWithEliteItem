@@ -81,7 +81,7 @@ The default allowlist includes `EliteEarthEquipment`, `EliteFireEquipment`, `Eli
 
 Automatically discovering additional aspects can include internal or nonstandard equipment. Use that option deliberately and test third-party compatibility.
 
-## 🛠️ Building from source
+## Building from source
 
 Install the **.NET 8 SDK** and run from the repository root:
 
@@ -106,7 +106,7 @@ GiveEliteItem.sln               .NET solution
 LICENSE                         MIT
 ```
 
-## 🧪 Compatibility & testing
+## Compatibility & testing
 
 The workflow compiles the plugin and exercises the selection algorithm (unique picks, exhausted pools, invalid inputs and repeated draws). **It does not run Risk of Rain 2 itself.**
 
