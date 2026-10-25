@@ -1,87 +1,75 @@
-# PlayWithEliteItem — Risk of Rain 2 Mod
+# PlayWithEliteItem
 
-**Um dos meus projetos publicados para jogadores de Risk of Rain 2.** O mod adiciona variedade às partidas ao distribuir um equipamento de elite aleatório no começo de uma run.
+**Risk of Rain 2 mod (BepInEx, C#)** — each player starts a run with one randomly chosen *elite aspect* equipped.
 
-[**🎮 Instalar pelo Thunderstore**](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [**💻 Código-fonte**](https://github.com/HelioConde/PlayWithEliteItem)
-
-![Thunderstore](https://img.shields.io/badge/Thunderstore-publicado-1ab394) ![Versão pública](https://img.shields.io/badge/versão_publicada-1.0.1-blue) ![Linguagem](https://img.shields.io/badge/C%23-.NET-512BD4?logo=dotnet&logoColor=white)
-
-## Publicação e desenvolvimento
-
-| | Thunderstore | Código do GitHub |
-| --- | --- | --- |
-| **Versão** | **1.0.1**, publicada | **1.1.0**, refatoração em testes |
-| **Comportamento** | Sorteio de equipamento de elite para o segundo slot, conforme descrição da publicação original | Distribuição server-authoritative, usando slot ativo e descoberta de aspectos via catálogo |
-| **Estado** | Disponível para instalação; compatibilidade atual precisa de teste no jogo | Código em modernização, ainda não publicado no Thunderstore |
-
-**Alcance:** aproximadamente **4 mil downloads** registrados no Thunderstore até outubro de 2026. Este número é uma referência histórica, não um contador em tempo real.
-
-> **Importante:** as funcionalidades e instruções técnicas abaixo descrevem o **código 1.1.0 do GitHub**. O pacote 1.0.1 do Thunderstore ainda tem o comportamento da implementação original. A compilação e os testes em jogo da refatoração precisam ser concluídos antes de um novo lançamento.
-
-## About the current source (v1.1.0 — work in progress)
-
-A server-authoritative **Risk of Rain 2** mod that grants each player a random **elite aspect** at the beginning of a run. The modernized code targets safer multiplayer behavior and configurable assignment, but **has not yet been validated or released**.
+> Version **1.1.1**. GitHub Actions builds the plugin and runs regression tests, but a live Risk of Rain 2 test (especially multiplayer) is still necessary.
 
 ## Features
 
-- Automatically equips an elite aspect in the **active equipment slot** (slot index `0`) so its passive elite effect can apply.
-- Detects aspects via the game's equipment catalog and `passiveBuffDef.isElite` flag; supports registered DLC/mod aspects when enabled.
-- Assigns different aspects until the available pool runs out, **then allows repeats**. Works with any player count.
-- Makes inventory changes on the **server only**; checks for players joining or spawning late.
-- Does not intercept equipment usage, alter cooldowns, or swap equipment slots.
-- Protects a player's existing active equipment by default.
+- Grants a random elite equipment in the **active equipment slot** (index `0`) so its passive buff can function.
+- **Server-authoritative** inventory edits and support for players joining after a run begins.
+- Picks unique aspects first; after the available list is exhausted, duplicates are allowed. No infinite loops.
+- Excludes aspects belonging to DLCs **disabled for that run**.
+- Defaults to the **seven classic aspects**. You can edit the allowlist to include more, or opt into automatic catalogue discovery.
+- Leaves existing equipment untouched by default; does not intercept equipment use or swap slots.
 
-## Installation
+## Installing
 
-1. Install the PC game and the appropriate **BepInExPack** through r2modman/Thunderstore.
-2. Build the mod or obtain its release DLL.
-3. Place `GiveEliteItem.dll` in the game's `BepInEx/plugins` directory.
-4. Run the game once to create `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg`.
+1. Install Risk of Rain 2 for PC and a matching BepInExPack (r2modman or Thunderstore Mod Manager).
+2. From [GitHub Actions](../../actions), open a successful run and download the **PlayWithEliteItem** artifact; extract `GiveEliteItem.dll`.
+3. Copy the DLL into `BepInEx/plugins`, then start the game.
+4. Configuration appears in `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg` after first launch.
 
-The host/server must have the mod to distribute the aspects. Test every intended multiplayer setup; vanilla synchronization does not guarantee compatibility with every other mod.
+Only the host/server assigns equipment. Other mod combinations may require additional testing. This plugin is not yet a published, in-game-certified release.
 
 ## Configuration
 
-The configuration is generated on first launch.
-
-| Section | Key | Default | Meaning |
+| Section | Key | Default | Description |
 | --- | --- | --- | --- |
-| General | Enabled | true | Enable automatic distribution |
-| Distribution | UniqueBeforeRepeats | true | Prefer distinct aspects, then allow repeats |
-| Distribution | IncludeAllRegisteredEliteAspects | true | Include catalogued elite aspects from DLC and mods |
-| Distribution | AllowedEliteEquipment | Seven original elite equipment names | Used when auto-discovery is disabled |
-| Equipment | ReplaceExistingEquipment | false | Replace players' current active equipment, if any |
-| Diagnostics | VerboseLogging | false | Log player assignments |
+| General | Enabled | true | Turn automatic aspect grants on/off |
+| Distribution | UniqueBeforeRepeats | true | Avoid repeats until pool exhausted |
+| Distribution | IncludeAllRegisteredEliteAspects | **false** | Advanced: include every registered elite aspect with an elite passive buff |
+| Distribution | AllowedEliteEquipment | Seven classic equipment names | Comma-separated allowlist when discovery is disabled |
+| Equipment | ReplaceExistingEquipment | false | Skip occupied active slots to avoid replacing another equipment |
+| Diagnostics | VerboseLogging | false | Log each grant and skip |
 
-**Important:** This mod grants an elite **equipment**, not a permanent independent buff. Replacing the equipment later can remove its elite effect. Existing equipped items are skipped by default.
+The classic allowlist is: `EliteEarthEquipment`, `EliteFireEquipment`, `EliteHauntedEquipment`, `EliteIceEquipment`, `EliteLightningEquipment`, `EliteLunarEquipment`, `ElitePoisonEquipment`.
 
-## Development
+For newly added expansions, first confirm the equipment internal name in the game's catalogue. Add it to `AllowedEliteEquipment` or deliberately enable automatic discovery. **Automatic discovery may include hidden/nonstandard aspects**; it is not the default.
 
-Requires the .NET SDK (8+ recommended).
+The game catalog may contain equipment for expansions that are disabled in a specific run. This plugin checks `requiredExpansion` before distributing.
+
+**Important:** This mod grants an elite *equipment*, not an independently permanent elite buff. Replacing that equipment removes the passive elite effect. Existing equipment is preserved by default.
+
+## Building and testing
+
+Install the .NET 8 SDK and run:
 
 ```bash
 dotnet restore GiveEliteItem.sln
 dotnet build GiveEliteItem.sln -c Release --no-restore
+dotnet run --project tests/PlayWithEliteItem.LogicTests/PlayWithEliteItem.LogicTests.csproj -c Release
 ```
 
-The project uses .NET Standard 2.1, BepInEx and RiskOfRain2.GameLibs. Dependencies are restored from NuGet; no copied Unity DLLs, generated `bin/` or `obj/` files are committed.
+The pure-C# regression suite tests uniqueness, exhausted pools, 100+ sequential draws, single-entry pools and invalid input. GitHub Actions runs these checks and uploads the compiled DLL as an artifact.
 
-The GitHub Actions workflow attempts a build and uploads the compiled plugin as an artifact. A successful compilation **does not** replace an in-game multiplayer test.
+### Manual gameplay checklist (still pending)
 
-## Manual test checklist
+- [ ] Solo: player receives an aspect, and the actual elite passive effect applies.
+- [ ] Multiplayer: host and clients receive exactly one aspect, with synchronized inventories.
+- [ ] Joining late: arriving players get an aspect once inventory is available.
+- [ ] Full lobby: exhaustion does not freeze the game; repeats work.
+- [ ] New run: the pool resets; no repeated grants on stage changes or respawns.
+- [ ] Existing equipment: remains untouched unless explicitly configured otherwise.
+- [ ] DLC toggle: aspect for a disabled expansion never appears.
+- [ ] Optional modded aspects: all included effects and displays work correctly.
+- [ ] Other popular mods and R2API/BepInEx versions: no startup exceptions.
 
-- [ ] Solo: exactly one active elite aspect, with its passive effect.
-- [ ] Multiplayer host: one aspect for each joined player, without duplicates until pool exhaustion.
-- [ ] Client joins late: receives an aspect once inventory is ready.
-- [ ] More players than available aspects: allows repeats without hanging.
-- [ ] Starting with a non-empty active equipment slot: skipped unless replacement is enabled.
-- [ ] New run: allocations reset and items are granted again.
-- [ ] DLC/modded elite catalogues: only entries with elite passive buffs are included.
+## Repository layout
 
-## Changes since 1.0.1
+- `GiveEliteItem/GiveEliteItem.cs` — server-only grants, configuration, catalog filtering.
+- `GiveEliteItem/AspectSelection.cs` — deterministic, game-independent random selection.
+- `tests/PlayWithEliteItem.LogicTests/` — lightweight automated regression tests.
+- `.github/workflows/build.yml` — CI build, tests, DLL artifact.
 
-Removed the fragile delayed equipment swap and its global flag, the hard-coded numeric equipment index, obsolete unused bonus-item enums, optional lobby adapter and manually copied build libraries.
-
-## License
-
-MIT — see [LICENSE](LICENSE). Original concept and authorship: AlchemyFlame (Hélio Conde).
+MIT License — AlchemyFlame (Hélio Conde).
