@@ -1,0 +1,11 @@
+## .NET build outputs
+**/bin/
+**/obj/
+**/.vs/
+*.user
+*.suo
+*.cache
+
+## Local test artifacts
+BepInEx/
+*.log
