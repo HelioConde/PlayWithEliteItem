@@ -1,8 +1,26 @@
-# PlayWithEliteItem
+# PlayWithEliteItem — Risk of Rain 2 Mod
 
-A server-authoritative **Risk of Rain 2** mod that grants each player a random **elite aspect** at the beginning of a run.
+**Um dos meus projetos publicados para jogadores de Risk of Rain 2.** O mod adiciona variedade às partidas ao distribuir um equipamento de elite aleatório no começo de uma run.
 
-> **v1.1.0 — modernized source (testing required).** This release rewrites the original 2024 logic. Compilation and live-game compatibility must be verified before publishing a release.
+[**🎮 Instalar pelo Thunderstore**](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [**💻 Código-fonte**](https://github.com/HelioConde/PlayWithEliteItem)
+
+![Thunderstore](https://img.shields.io/badge/Thunderstore-publicado-1ab394) ![Versão pública](https://img.shields.io/badge/versão_publicada-1.0.1-blue) ![Linguagem](https://img.shields.io/badge/C%23-.NET-512BD4?logo=dotnet&logoColor=white)
+
+## Publicação e desenvolvimento
+
+| | Thunderstore | Código do GitHub |
+| --- | --- | --- |
+| **Versão** | **1.0.1**, publicada | **1.1.0**, refatoração em testes |
+| **Comportamento** | Sorteio de equipamento de elite para o segundo slot, conforme descrição da publicação original | Distribuição server-authoritative, usando slot ativo e descoberta de aspectos via catálogo |
+| **Estado** | Disponível para instalação; compatibilidade atual precisa de teste no jogo | Código em modernização, ainda não publicado no Thunderstore |
+
+**Alcance:** aproximadamente **4 mil downloads** registrados no Thunderstore até outubro de 2026. Este número é uma referência histórica, não um contador em tempo real.
+
+> **Importante:** as funcionalidades e instruções técnicas abaixo descrevem o **código 1.1.0 do GitHub**. O pacote 1.0.1 do Thunderstore ainda tem o comportamento da implementação original. A compilação e os testes em jogo da refatoração precisam ser concluídos antes de um novo lançamento.
+
+## About the current source (v1.1.0 — work in progress)
+
+A server-authoritative **Risk of Rain 2** mod that grants each player a random **elite aspect** at the beginning of a run. The modernized code targets safer multiplayer behavior and configurable assignment, but **has not yet been validated or released**.
 
 ## Features
 
