@@ -35,6 +35,29 @@ The Thunderstore page displayed **approximately 4,000 downloads** in October 202
 
 > **Do not mistake source version 1.1.1 for a released Thunderstore update.** The modernized code is under test. Installing the Thunderstore package currently means installing the separately published 1.0.1 build.
 
+## 📦 Minimal Thunderstore dependencies (next release)
+
+The currently published **1.0.1** package on Thunderstore still lists approximately **30 required packages** because it includes the old full R2API distribution. These reflect the **published package**, not the newer GitHub source.
+
+The refactored **1.1.1** plugin does not use R2API. A [new minimal Thunderstore manifest](thunderstore/manifest.json) now declares just **one direct dependency**:
+
+```json
+"dependencies": ["bbepis-BepInExPack-5.4.2122"]
+```
+
+BepInExPack has its own *transitive* requirements, so the mod manager may still install several framework packages. They do **not** need to be duplicated in PlayWithEliteItem's manifest.
+
+To generate a **local release candidate** after compiling:
+
+```bash
+python scripts/validate_manifest.py
+python scripts/package_thunderstore.py
+```
+
+The packager reuses the original icon from the publicly released 1.0.1 ZIP if the repository has no local `thunderstore/icon.png`. [GitHub Actions](https://github.com/HelioConde/PlayWithEliteItem/actions) also produces the ZIP as a **candidate artifact**, but it is **not automatically published**.
+
+See [Thunderstore release preparation](docs/THUNDERSTORE_RELEASE.md). **Gameplay testing is still required** before uploading the reduced-dependency version under the existing CONDE team.
+
 ## ✨ Modernized source: feature overview (v1.1.1)
 
 - **Server-authoritative distribution:** only the host/server modifies player inventories.
