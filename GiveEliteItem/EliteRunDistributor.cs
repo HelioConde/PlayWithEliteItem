@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using BepInEx.Logging;
 using RoR2;
@@ -23,7 +22,7 @@ namespace GiveEliteItem
         private readonly List<int> availableAspects = new List<int>();
 
         private Run activeRun;
-        private Random random;
+        private System.Random random;
         private float nextScanTime;
         private bool emptyPoolLogged;
 
@@ -84,7 +83,7 @@ namespace GiveEliteItem
         {
             Reset();
             activeRun = run;
-            random = new Random();
+            random = new System.Random();
             logger.LogInfo("Elite distribution ready for the new run.");
         }
 
