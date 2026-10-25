@@ -4,10 +4,12 @@ Use a **DLL do GitHub Actions**, não a versão 1.0.1 publicada no Thunderstore.
 
 ## Preparação
 
-1. Crie um perfil isolado no r2modman, com BepInExPack e somente o `GiveEliteItem.dll` atualizado.
+1. Crie um perfil **novo** no r2modman; instale o BepInExPack completo com suas dependências e somente o `GiveEliteItem.dll` atualizado.
 2. Confirme que **não há duas versões** de `GiveEliteItem.dll` instaladas.
-3. Abra `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg` e mantenha as opções padrão no primeiro teste.
+3. Inicie o jogo uma vez. Após ver `PlayWithEliteItem 1.1.1 loaded.` no `LogOutput.log`, confira `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg` e mantenha o padrão.
 4. Se precisar investigar algum erro, altere `Diagnostics.VerboseLogging` para `true` e reinicie.
+
+Se ocorrer `Error loading ... Newtonsoft.Json, Version=12.0.0.0`, consulte [docs/TROUBLESHOOTING.md](TROUBLESHOOTING.md) antes de prosseguir.
 
 ## Verificações no jogo
 

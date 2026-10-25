@@ -4,7 +4,7 @@
 
 PlayWithEliteItem entrega um **equipamento de elite aleatório** para cada jogador elegível no início de uma partida. A distribuição acontece no **servidor/host**, usando o inventário original do jogo. Não adiciona HUD, comandos personalizados ou conteúdos novos.
 
-[Thunderstore — versão pública](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar compilação de teste](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Como testar em português](docs/TESTE_NO_JOGO.md)
+[Thunderstore — versão pública](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar compilação de teste](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Como testar em português](docs/TESTE_NO_JOGO.md) · [Resolver erros de carregamento](docs/TROUBLESHOOTING.md)
 
 > **Atenção:** a versão pública **1.0.1** no Thunderstore ainda é a implementação antiga. O código **1.1.1** do GitHub é uma refatoração com comportamento diferente, **ainda não validada dentro do jogo**. Não foi publicada uma nova versão no Thunderstore.
 
@@ -36,6 +36,8 @@ O BepInExPack instala suas próprias dependências transitivas. **Uma dependênc
 2. Abra [GitHub Actions](https://github.com/HelioConde/PlayWithEliteItem/actions) e escolha a última execução **Build and test mod** com status verde.
 3. Baixe o artefato **PlayWithEliteItem**, extraia `GiveEliteItem.dll` e coloque-o em `BepInEx/plugins` do perfil de teste.
 4. **Não mantenha a DLL antiga da versão 1.0.1 no mesmo perfil.** Inicie o jogo e comece uma partida.
+
+**Se o arquivo de configuração não aparecer ou o log indicar falta de `Newtonsoft.Json 12.0.0.0`, veja o [diagnóstico de carregamento](docs/TROUBLESHOOTING.md).** Isso pode indicar uma instalação de BepInEx incompleta; não adicione DLLs de origem desconhecida.
 
 Para testar a nova distribuição, use primeiro uma partida solo sem outros mods de gameplay. Confira o roteiro em [docs/TESTE_NO_JOGO.md](docs/TESTE_NO_JOGO.md).
 
