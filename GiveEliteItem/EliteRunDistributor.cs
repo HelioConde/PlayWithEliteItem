@@ -47,6 +47,7 @@ namespace GiveEliteItem
         private float nextAuthorityWarning;
         private float nextStatusLog;
         private bool catalogDiagnosticsLogged;
+        private float nextCatalogDiagnosticTime;
         private readonly HashSet<CharacterMaster> reportedGrantFailures =
             new HashSet<CharacterMaster>();
 
@@ -76,7 +77,9 @@ namespace GiveEliteItem
             foreach (string name in EliteEquipmentNames.Parse(settings.AllowedEliteEquipment.Value))
             {
                 EquipmentIndex index = EquipmentCatalog.FindEquipmentIndex(name);
-                EquipmentDef def = EquipmentCatalog.GetEquipmentDef(index);
+                EquipmentDef def = index == EquipmentIndex.None
+                    ? null
+                    : EquipmentCatalog.GetEquipmentDef(index);
                 if (index == EquipmentIndex.None || def == null)
                 {
                     Trace("CATALOG", name + " => NOT FOUND");
@@ -173,11 +176,11 @@ namespace GiveEliteItem
                     settings.AllowedEliteEquipment.Value,
                     availableAspects);
 
-                if (!catalogDiagnosticsLogged)
+                if (!catalogDiagnosticsLogged || Time.unscaledTime >= nextCatalogDiagnosticTime)
                 {
                     DumpCatalogDiagnostics(run);
-                    if (availableAspects.Count != 0)
-                        catalogDiagnosticsLogged = true;
+                    catalogDiagnosticsLogged = true;
+                    nextCatalogDiagnosticTime = Time.unscaledTime + 15f;
                 }
 
                 if (availableAspects.Count == 0)
@@ -507,6 +510,7 @@ namespace GiveEliteItem
             nextAuthorityWarning = 0f;
             nextStatusLog = 0f;
             catalogDiagnosticsLogged = false;
+            nextCatalogDiagnosticTime = 0f;
             reportedGrantFailures.Clear();
             players.Clear();
             assignedAspects.Clear();
