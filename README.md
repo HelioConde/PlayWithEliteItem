@@ -2,11 +2,11 @@
 
 **Risk of Rain 2 · Equipamento de elite no segundo slot · Server-side · C#**
 
-Mod de AlchemyFlame que dá a cada jogador um **aspecto de elite aleatório equipado ao nascer**. Ao pegar outro equipamento, ele fica ativo e o elite vai para uma reserva lógica do servidor, evitando que caia no chão. A versão de teste **1.1.6** restaura a concessão direta do elite com `SetEquipmentIndexForSlot` (como no código antigo) e remove um bloqueio baseado na contagem exata de slots. Continua aguardando o corpo do personagem estar pronto, para não perder o equipamento durante o spawn.
+Mod de AlchemyFlame que concede um equipamento de elite ao nascer e permite guardar outro equipamento no servidor. **A versão 1.1.7 corrige a dependência ausente `MMHOOK_RoR2.dll`**: o código anterior não chegou a iniciar no seu jogo. A mecânica de gameplay permanece igual à 1.1.6.
 
 [Versão pública no Thunderstore](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar DLL de teste](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Roteiro de testes](docs/TESTE_NO_JOGO.md)
 
-> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.6. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
+> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.7. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
 
 ## Como funciona
 
@@ -21,13 +21,13 @@ Não interceptamos inventários de múltiplos slots/conjuntos, como MUL-T e Func
 
 ## Instalação da versão de teste
 
-1. Instale [BepInExPack](https://thunderstore.io/c/riskofrain2/p/bbepis/BepInExPack/) **com as dependências** pelo r2modman. Execute o jogo com **Start modded**.
+1. Instale [BepInExPack](https://thunderstore.io/c/riskofrain2/p/bbepis/BepInExPack/) **e [HookGenPatcher 1.2.9](https://thunderstore.io/c/riskofrain2/p/RiskofThunder/HookGenPatcher/)** no mesmo perfil do r2modman, aceitando suas dependências. Inicie com **Start modded**: HookGenPatcher gera `MMHOOK_RoR2.dll` antes do carregamento do plugin.
 2. No [GitHub Actions](https://github.com/HelioConde/PlayWithEliteItem/actions), abra a última execução **Build and test mod** aprovada.
 3. Baixe o artefato **PlayWithEliteItem**, extraia `GiveEliteItem.dll` e coloque-o em `BepInEx/plugins` do perfil ativo.
 4. Remova qualquer cópia da DLL 1.0.1/1.1.1 desse mesmo perfil e não use `Risk of Rain 2/Mods` para esse plugin.
 5. Inicie uma partida e teste pegar o Radar, usá-lo e observar a troca. Siga o [roteiro](docs/TESTE_NO_JOGO.md).
 
-Se o plugin nem carregar, veja o [diagnóstico de bibliotecas BepInEx](docs/TROUBLESHOOTING.md). Se ele carregar mas o Q continuar vazio, verifique no `BepInEx/LogOutput.log` as mensagens prefixadas por `[PWEI]`: `[BOOT]`, `[RUN]`, `[CATALOG]`, `[SCAN]`, `[GRANT]`, `[VERIFY]`, `[PICKUP]` e `[SWAP]`.
+Se o plugin não iniciar com `FileNotFoundException: MMHOOK_RoR2`, instale o HookGenPatcher no **mesmo perfil**. Veja o [diagnóstico do erro](docs/TROUBLESHOOTING.md). Se ele carregar mas o Q continuar vazio, verifique no `BepInEx/LogOutput.log` as mensagens prefixadas por `[PWEI]`: `[BOOT]`, `[RUN]`, `[CATALOG]`, `[SCAN]`, `[GRANT]`, `[VERIFY]`, `[PICKUP]` e `[SWAP]`.
 
 ## Configuração
 
@@ -48,7 +48,7 @@ O antigo parâmetro `Equipment.ReplaceExistingEquipment` não é mais utilizado.
 
 ## Dependências
 
-**Direta:** apenas `bbepis-BepInExPack-5.4.2122`. Seus requisitos transitivos são instalados pelo gerenciador. O projeto não utiliza R2API nem adiciona conteúdo ou RPCs. O projeto de compilação usa `MMHOOK.RoR2` para declarar os hooks no C#, sem exigir R2API como dependência direta.
+**Duas dependências diretas**: `bbepis-BepInExPack-5.4.2122` e `RiskofThunder-HookGenPatcher-1.2.9`. HookGenPatcher gera `MMHOOK_RoR2.dll`, exigida pelos hooks `On.RoR2` deste plugin. A biblioteca `MMHOOK.RoR2` do projeto C# serve apenas à compilação e não instala automaticamente a DLL no perfil do jogo. A suíte R2API completa **não é necessária**. Ambos os pacotes podem ter dependências transitivas.
 
 ## Código e testes
 

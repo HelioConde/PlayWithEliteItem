@@ -1,12 +1,12 @@
-# PlayWithEliteItem 1.1.6 — teste no Risk of Rain 2
+# PlayWithEliteItem 1.1.7 — teste no Risk of Rain 2
 
-A versão **1.1.2** armazenava o elite numa reserva invisível ao nascer. A **1.1.6** deve mostrar o elite no slot Q desde o início.
+A versão **1.1.2** armazenava o elite numa reserva invisível ao nascer. A **1.1.7** deve mostrar o elite no slot Q desde o início.
 
 ## Preparação
 
-1. Use um perfil com BepInExPack completo e somente o `GiveEliteItem.dll` mais recente.
-2. Baixe a DLL do GitHub Actions da versão **1.1.6**.
-3. Inicie pelo gerenciador e confirme `PlayWithEliteItem 1.1.6 loaded` no `BepInEx/LogOutput.log`.
+1. Use um perfil com **BepInExPack e HookGenPatcher 1.2.9**, além de somente um `GiveEliteItem.dll`.
+2. Baixe a DLL do GitHub Actions da versão **1.1.7**.
+3. Inicie pelo gerenciador e confirme **`[PWEI][BOOT]`** no `BepInEx/LogOutput.log`. O mod aparecer na aba General, sozinho, não confirma que o `Awake()` foi executado.
 4. O novo `Diagnostics.TraceGameplay=true` já ativa os logs de investigação por padrão; mantenha-o ligado durante o teste.
 
 ## Teste principal
@@ -39,7 +39,7 @@ O mod aparecer na aba General do BepInEx confirma **apenas o carregamento**. Se 
 
 Salve e envie o `LogOutput.log` da **mesma partida** para determinar a causa com precisão.
 
-## Diagnóstico novo da versão 1.1.6
+## Diagnóstico novo da versão 1.1.7
 
 Abra o **BepInEx/LogOutput.log** após entrar numa partida nova. Pesquise `[PWEI]` para ver o fluxo do mod:
 

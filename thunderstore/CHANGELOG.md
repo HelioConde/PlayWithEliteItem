@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.7 — Corrige dependência em tempo de execução (candidato, não publicado)
+
+- Declara HookGenPatcher 1.2.9 como dependência junto ao BepInExPack.
+- O log real da 1.1.6 demonstrou a ausência de `MMHOOK_RoR2.dll`; o código de gameplay nem iniciava.
+- Atualiza o validador e a documentação sem reintroduzir a suíte R2API.
+- Mantém a lógica de gameplay da 1.1.6; ainda exige teste no jogo.
+
 ## 1.1.6 — Diagnostic instrumentation (unpublished candidate)
 
 - Add `Diagnostics.TraceGameplay=true`, enabled by default for current troubleshooting.
@@ -19,7 +26,6 @@
 - Preserve the second logical equipment reserve and automatic post-use switching.
 - No additional client HUD or custom RPCs. In-game verification still required.
 
-# Changelog
 
 ## 1.1.4 — Diagnostic build (not published)
 
@@ -30,7 +36,6 @@
 - No changes to the server-side/no-HUD requirement.
 - Still requires testing the spawn grant and equipment exchange in-game.
 
-# Changelog
 
 ## 1.1.3 — Test candidate (not published)
 
