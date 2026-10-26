@@ -1,8 +1,8 @@
 {
   "name": "PlayWithEliteItem",
-  "version_number": "1.1.5",
+  "version_number": "1.1.6",
   "website_url": "https://github.com/HelioConde/PlayWithEliteItem",
-  "description": "Concede aspecto elite ao jogador ao nascer, preservando-o em reserva server-side ao coletar outro equipamento.",
+  "description": "Aspecto elite aleatorio ao nascer, segundo equipamento reservado server-side e diagnosticos de inicializacao.",
   "dependencies": [
     "bbepis-BepInExPack-5.4.2122"
   ]

@@ -9,13 +9,20 @@ namespace GiveEliteItem
     {
         public const string PluginGuid = "AlchemyFlame.PlayWithEliteItem";
         public const string PluginName = "PlayWithEliteItem";
-        public const string PluginVersion = "1.1.5";
+        public const string PluginVersion = "1.1.6";
 
         private EliteRunDistributor distributor;
 
         private void Awake()
         {
-            distributor = new EliteRunDistributor(this, new EliteSettings(Config), Logger);
+            var settings = new EliteSettings(Config);
+            distributor = new EliteRunDistributor(this, settings, Logger);
+            Logger.LogInfo("[PWEI][BOOT] Version=" + PluginVersion +
+                " Enabled=" + settings.Enabled.Value +
+                " TraceGameplay=" + settings.TraceGameplay.Value +
+                " AutoDiscovery=" + settings.IncludeAllRegisteredEliteAspects.Value +
+                " AllowedEquipment=" + settings.AllowedEliteEquipment.Value +
+                " AutoSwap=" + settings.AutomaticSwapAfterUse.Value);
             On.RoR2.EquipmentSlot.PerformEquipmentAction += OnPerformEquipmentAction;
             On.RoR2.GenericPickupController.AttemptGrant += OnAttemptGrant;
             Logger.LogInfo(PluginName + " " + PluginVersion + " loaded (server-side elite reserve).");

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.6 — Diagnostic instrumentation (unpublished candidate)
+
+- Add `Diagnostics.TraceGameplay=true`, enabled by default for current troubleshooting.
+- Trace startup, run state, equipment catalog, player discovery and grant attempts/results.
+- Audit the active equipment 1.5 seconds after successful granting to detect overrides.
+- Trace world equipment pickups and automatic swaps.
+- Throttle routine player discovery logs to once every 10 seconds; avoid duplicate grant failure warnings.
+- No intentional changes to equipment distribution or second-slot behavior.
+- Requires a real in-game test and a fresh LogOutput.log to identify the remaining defect.
+
 ## 1.1.5 — Restore original grant behavior (testing candidate)
 
 - Remove the exact equipmentSlotCount/equipmentSetCount gate that could silently skip players.

@@ -24,6 +24,8 @@ namespace GiveEliteItem
             internal EquipmentState Reserve;
             internal bool HasReserve;
             internal bool SwapPending;
+            internal bool GrantCheckPending;
+            internal float GrantTime;
         }
 
         private readonly GiveEliteItem plugin;
@@ -43,6 +45,10 @@ namespace GiveEliteItem
             new HashSet<CharacterMaster>();
         private bool waitingForPlayersLogged;
         private float nextAuthorityWarning;
+        private float nextStatusLog;
+        private bool catalogDiagnosticsLogged;
+        private readonly HashSet<CharacterMaster> reportedGrantFailures =
+            new HashSet<CharacterMaster>();
 
         internal EliteRunDistributor(
             GiveEliteItem plugin, EliteSettings settings, ManualLogSource logger)
@@ -50,6 +56,68 @@ namespace GiveEliteItem
             this.plugin = plugin;
             this.settings = settings;
             this.logger = logger;
+        }
+
+        private void Trace(string category, string detail)
+        {
+            if (settings.TraceGameplay.Value)
+                logger.LogInfo("[PWEI][" + category + "] " + detail);
+        }
+
+        private void DumpCatalogDiagnostics(Run run)
+        {
+            Trace("CATALOG", "EquipmentCatalog count=" + EquipmentCatalog.equipmentCount +
+                " autoDiscovery=" + settings.IncludeAllRegisteredEliteAspects.Value +
+                " eligible=" + availableAspects.Count);
+
+            if (settings.IncludeAllRegisteredEliteAspects.Value)
+                return;
+
+            foreach (string name in EliteEquipmentNames.Parse(settings.AllowedEliteEquipment.Value))
+            {
+                EquipmentIndex index = EquipmentCatalog.FindEquipmentIndex(name);
+                EquipmentDef def = EquipmentCatalog.GetEquipmentDef(index);
+                if (index == EquipmentIndex.None || def == null)
+                {
+                    Trace("CATALOG", name + " => NOT FOUND");
+                    continue;
+                }
+
+                bool expansionEnabled = def.requiredExpansion == null ||
+                    run.IsExpansionEnabled(def.requiredExpansion);
+                bool eliteBuff = def.passiveBuffDef != null && def.passiveBuffDef.isElite;
+                Trace("CATALOG", name + " => index=" + index +
+                    " actualName=" + def.name +
+                    " expansionEnabled=" + expansionEnabled +
+                    " passiveEliteBuff=" + eliteBuff);
+            }
+        }
+
+        private void VerifyGrantedEquipment()
+        {
+            foreach (var player in players)
+            {
+                PlayerEquipment state = player.Value;
+                if (!state.GrantCheckPending || Time.unscaledTime < state.GrantTime + 1.5f)
+                    continue;
+
+                state.GrantCheckPending = false;
+                CharacterMaster master = player.Key;
+                if (master == null || master.inventory == null)
+                {
+                    logger.LogWarning("[PWEI][VERIFY] Player inventory vanished after grant.");
+                    continue;
+                }
+
+                EquipmentLocation location = master.inventory.activeEquipmentLocation;
+                EquipmentIndex current = master.inventory.GetEquipment(location).equipmentIndex;
+                Trace("VERIFY", "Master=" + master.name + " expectedElite=" +
+                    state.EliteIndex + " current=" + current +
+                    " location=" + location.slot + "/" + location.set);
+                if (current != state.EliteIndex)
+                    logger.LogWarning("[PWEI][VERIFY] Starting elite is no longer active 1.5s " +
+                        "after grant (another mod, a pickup or game initialization may have changed it).");
+            }
         }
 
         internal void Tick()
@@ -78,10 +146,21 @@ namespace GiveEliteItem
                 Reset();
                 activeRun = run;
                 random = new System.Random();
-                logger.LogInfo("Elite equipment reserve initialized for a new run.");
+                logger.LogInfo("[PWEI][RUN] New run detected, NetworkServer.active=" +
+                    NetworkServer.active + " runTime=" + run.time);
             }
 
-            if (!settings.Enabled.Value || Time.unscaledTime < nextScanTime)
+            if (!settings.Enabled.Value)
+            {
+                if (Time.unscaledTime >= nextStatusLog)
+                {
+                    nextStatusLog = Time.unscaledTime + 10f;
+                    Trace("RUN", "Mod disabled by General.Enabled=false.");
+                }
+                return;
+            }
+
+            if (Time.unscaledTime < nextScanTime)
                 return;
 
             nextScanTime = Time.unscaledTime + ScanIntervalSeconds;
@@ -94,29 +173,53 @@ namespace GiveEliteItem
                     settings.AllowedEliteEquipment.Value,
                     availableAspects);
 
+                if (!catalogDiagnosticsLogged)
+                {
+                    DumpCatalogDiagnostics(run);
+                    if (availableAspects.Count != 0)
+                        catalogDiagnosticsLogged = true;
+                }
+
                 if (availableAspects.Count == 0)
                 {
                     if (!emptyPoolLogged)
                     {
-                        logger.LogWarning("No eligible elite aspects. Check expansions and config.");
+                        logger.LogWarning("[PWEI][CATALOG] No eligible elite aspects. " +
+                            "Check the internal equipment names and enabled expansions.");
                         emptyPoolLogged = true;
                     }
                     return;
                 }
 
                 emptyPoolLogged = false;
-                logger.LogInfo("Eligible elite aspects: " + availableAspects.Count +
-                    " (auto-discovery=" + settings.IncludeAllRegisteredEliteAspects.Value + ").");
+                logger.LogInfo("[PWEI][CATALOG] Eligible elite aspects: " +
+                    availableAspects.Count + ".");
             }
 
             int candidateControllers = 0;
+            int missingMaster = 0;
+            int missingUser = 0;
+            int missingInventory = 0;
+            int missingBody = 0;
             foreach (PlayerCharacterMasterController controller in
                 PlayerCharacterMasterController.instances)
             {
                 candidateControllers++;
-                if (controller == null || controller.master == null ||
-                    controller.networkUser == null || controller.master.inventory == null)
+                if (controller == null || controller.master == null)
+                {
+                    missingMaster++;
                     continue;
+                }
+                if (controller.networkUser == null)
+                {
+                    missingUser++;
+                    continue;
+                }
+                if (controller.master.inventory == null)
+                {
+                    missingInventory++;
+                    continue;
+                }
 
                 CharacterMaster master = controller.master;
                 if (players.ContainsKey(master))
@@ -130,9 +233,10 @@ namespace GiveEliteItem
                 CharacterBody body = master.GetBody();
                 if (body == null || body.inventory == null)
                 {
+                    missingBody++;
                     if (reportedWaitingForBody.Add(master))
-                        logger.LogInfo("Waiting for character body before giving elite to " +
-                            controller.networkUser.userName + ".");
+                        Trace("PLAYER", "Waiting for character body: " +
+                            controller.networkUser.userName + " master=" + master.name);
                     continue;
                 }
 
@@ -146,6 +250,13 @@ namespace GiveEliteItem
 
                 EquipmentLocation location = inventory.activeEquipmentLocation;
                 EquipmentState previous = inventory.GetEquipment(location);
+                if (!reportedGrantFailures.Contains(master))
+                    Trace("GRANT", "Attempt player=" + controller.networkUser.userName +
+                        " selected=" + elite +
+                        " location=" + location.slot + "/" + location.set +
+                        " previousEquipment=" + previous.equipmentIndex +
+                        " slots=" + inventory.equipmentSlotCount +
+                        " sets=" + inventory.equipmentSetCount);
                 var state = new PlayerEquipment
                 {
                     EliteIndex = elite,
@@ -174,28 +285,50 @@ namespace GiveEliteItem
                         location.slot, location.set);
                 }
 
-                if (inventory.GetEquipment(location).equipmentIndex != elite)
+                EquipmentIndex actualAfterGrant =
+                    inventory.GetEquipment(location).equipmentIndex;
+                if (actualAfterGrant != elite)
                 {
-                    logger.LogWarning("Elite grant failed for " +
-                        controller.networkUser.userName + ". Selected=" + elite +
-                        ", active location=" + location.slot + "/" + location.set +
-                        ", slots=" + inventory.equipmentSlotCount +
-                        ", sets=" + inventory.equipmentSetCount + ". Will retry.");
+                    if (reportedGrantFailures.Add(master))
+                        logger.LogWarning("[PWEI][GRANT] FAILED player=" +
+                            controller.networkUser.userName + " selected=" + elite +
+                            " actual=" + actualAfterGrant +
+                            " location=" + location.slot + "/" + location.set +
+                            " slots=" + inventory.equipmentSlotCount +
+                            " sets=" + inventory.equipmentSetCount + ". Retrying.");
                     continue;
                 }
 
+                reportedGrantFailures.Remove(master);
+                state.GrantTime = Time.unscaledTime;
+                state.GrantCheckPending = true;
                 players.Add(master, state);
                 assignedAspects.Add(chosen);
                 EquipmentDef definition = EquipmentCatalog.GetEquipmentDef(elite);
-                logger.LogInfo("STARTING ELITE GRANTED: " + definition.name +
-                    " to " + controller.networkUser.userName +
-                    " (active slot=" + location.slot + ", set=" + location.set + ").");
+                logger.LogInfo("[PWEI][GRANT] SUCCESS " + definition.name +
+                    " player=" + controller.networkUser.userName +
+                    " slot=" + location.slot + " set=" + location.set +
+                    " actual=" + actualAfterGrant);
             }
 
             if (candidateControllers == 0 && !waitingForPlayersLogged)
             {
                 waitingForPlayersLogged = true;
-                logger.LogWarning("Run is active, but no PlayerCharacterMasterController is registered yet.");
+                logger.LogWarning("[PWEI][PLAYER] No PlayerCharacterMasterController instances in run.");
+            }
+
+            VerifyGrantedEquipment();
+            if (Time.unscaledTime >= nextStatusLog)
+            {
+                nextStatusLog = Time.unscaledTime + 10f;
+                Trace("SCAN", "controllers=" + candidateControllers +
+                    " registered=" + players.Count +
+                    " missingMaster=" + missingMaster +
+                    " missingUser=" + missingUser +
+                    " missingInventory=" + missingInventory +
+                    " waitingBody=" + missingBody +
+                    " eligibleAspects=" + availableAspects.Count +
+                    " runTime=" + run.time);
             }
         }
 
@@ -209,8 +342,14 @@ namespace GiveEliteItem
 
             if (!EliteRotationRules.ShouldRotate(
                 true, state.HasReserve, state.SwapPending))
+            {
+                Trace("USE", "Activation ignored: reserve=" + state.HasReserve +
+                    " pending=" + state.SwapPending + " equipment=" + activated.name);
                 return;
+            }
 
+            Trace("USE", "Activation success; scheduling switch equipment=" +
+                activated.name + " delay=" + settings.SwapDelaySeconds.Value);
             state.SwapPending = true;
             plugin.StartCoroutine(SwapAfterDelay(
                 master, state, activated.equipmentIndex, runGeneration));
@@ -255,9 +394,9 @@ namespace GiveEliteItem
                 state.Reserve = equipped;
                 state.HasReserve = equipped.equipmentIndex != EquipmentIndex.None;
 
-                if (settings.VerboseLogging.Value)
-                    logger.LogInfo("Equipment switched: " + equipped.equipmentIndex +
-                        " -> " + next.equipmentIndex);
+                Trace("SWAP", "SUCCESS activeBefore=" + equipped.equipmentIndex +
+                    " activeAfter=" + next.equipmentIndex +
+                    " reserveAfter=" + state.Reserve.equipmentIndex);
             }
             finally
             {
@@ -289,6 +428,11 @@ namespace GiveEliteItem
 
             EquipmentLocation location = inventory.activeEquipmentLocation;
             EquipmentState active = inventory.GetEquipment(location);
+            Trace("PICKUP", "Equipment pickup=" + pickup.equipmentIndex +
+                " activeBefore=" + active.equipmentIndex +
+                " reserve=" + state.Reserve.equipmentIndex +
+                " reservePresent=" + state.HasReserve +
+                " pendingSwap=" + state.SwapPending);
 
             if (!EliteRotationRules.ShouldProtectElitePickup(
                 state.SwapPending,
@@ -331,8 +475,9 @@ namespace GiveEliteItem
                     state.Reserve = active;
                     state.HasReserve = true;
 
-                    if (settings.VerboseLogging.Value)
-                        logger.LogInfo("Elite kept in logical slot 2 after pickup.");
+                    state.GrantCheckPending = false;
+                    Trace("PICKUP", "SUCCESS activeNow=" + result.equipmentIndex +
+                        " eliteStored=" + state.Reserve.equipmentIndex);
                 }
                 else
                 {
@@ -342,8 +487,10 @@ namespace GiveEliteItem
                     if (result.equipmentIndex == replacement.equipmentIndex)
                         inventory.SetEquipment(active, location.slot, location.set);
                     else
-                        logger.LogWarning(
-                            "Unexpected pickup result; inventory modified externally.");
+                        logger.LogWarning("[PWEI][PICKUP] Unexpected inventory result " +
+                            result.equipmentIndex + " after pickup " + pickup.equipmentIndex);
+                    Trace("PICKUP", "Pickup not confirmed. ActiveNow=" +
+                        inventory.GetEquipment(location).equipmentIndex);
                 }
             }
         }
@@ -358,6 +505,9 @@ namespace GiveEliteItem
             waitingForPlayersLogged = false;
             reportedWaitingForBody.Clear();
             nextAuthorityWarning = 0f;
+            nextStatusLog = 0f;
+            catalogDiagnosticsLogged = false;
+            reportedGrantFailures.Clear();
             players.Clear();
             assignedAspects.Clear();
             availableAspects.Clear();

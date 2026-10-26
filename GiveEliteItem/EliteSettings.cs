@@ -16,6 +16,7 @@ namespace GiveEliteItem
         internal readonly ConfigEntry<bool> AutomaticSwapAfterUse;
         internal readonly ConfigEntry<float> SwapDelaySeconds;
         internal readonly ConfigEntry<bool> VerboseLogging;
+        internal readonly ConfigEntry<bool> TraceGameplay;
 
         internal EliteSettings(ConfigFile config)
         {
@@ -46,7 +47,13 @@ namespace GiveEliteItem
 
             VerboseLogging = config.Bind(
                 "Diagnostics", "VerboseLogging", false,
-                "Log equipment assignments, rotations and protected pickups.");
+                "Log additional low-level equipment events.");
+
+            // New key: stays enabled even for profiles where the older
+            // VerboseLogging setting was previously saved as false.
+            TraceGameplay = config.Bind(
+                "Diagnostics", "TraceGameplay", true,
+                "Temporarily log run, catalog, player and equipment state for troubleshooting.");
         }
     }
 }
