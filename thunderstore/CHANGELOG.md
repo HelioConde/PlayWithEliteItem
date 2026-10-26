@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.5 — Restore original grant behavior (testing candidate)
+
+- Remove the exact equipmentSlotCount/equipmentSetCount gate that could silently skip players.
+- Use the original SetEquipmentIndexForSlot API to grant elite equipment at spawn (with an active-set-aware fallback).
+- Continue verifying the actual inventory after assignment instead of claiming success without a grant.
+- Log when the player's character body is not ready and when the current process is not the server.
+- Preserve the second logical equipment reserve and automatic post-use switching.
+- No additional client HUD or custom RPCs. In-game verification still required.
+
+# Changelog
+
 ## 1.1.4 — Diagnostic build (not published)
 
 - Treat the configured classic elite equipment names as an explicit allowlist.

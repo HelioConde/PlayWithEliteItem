@@ -2,11 +2,11 @@
 
 **Risk of Rain 2 · Equipamento de elite no segundo slot · Server-side · C#**
 
-Mod de AlchemyFlame que dá a cada jogador um **aspecto de elite aleatório equipado ao nascer**. Ao pegar outro equipamento, ele fica ativo e o elite vai para uma reserva lógica do servidor, evitando que caia no chão. A versão de teste **1.1.4** incorpora diagnósticos de inicialização para descobrir por que o aspecto às vezes não aparece ao nascer.
+Mod de AlchemyFlame que dá a cada jogador um **aspecto de elite aleatório equipado ao nascer**. Ao pegar outro equipamento, ele fica ativo e o elite vai para uma reserva lógica do servidor, evitando que caia no chão. A versão de teste **1.1.5** restaura a concessão direta do elite com `SetEquipmentIndexForSlot` (como no código antigo) e remove um bloqueio baseado na contagem exata de slots. Continua aguardando o corpo do personagem estar pronto, para não perder o equipamento durante o spawn.
 
 [Versão pública no Thunderstore](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar DLL de teste](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Roteiro de testes](docs/TESTE_NO_JOGO.md)
 
-> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.4. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
+> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.5. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
 
 ## Como funciona
 
@@ -27,7 +27,7 @@ Não interceptamos inventários de múltiplos slots/conjuntos, como MUL-T e Func
 4. Remova qualquer cópia da DLL 1.0.1/1.1.1 desse mesmo perfil e não use `Risk of Rain 2/Mods` para esse plugin.
 5. Inicie uma partida e teste pegar o Radar, usá-lo e observar a troca. Siga o [roteiro](docs/TESTE_NO_JOGO.md).
 
-Se o plugin nem carregar, veja o [diagnóstico de bibliotecas BepInEx](docs/TROUBLESHOOTING.md). Se ele carregar mas o Q continuar vazio, verifique no `BepInEx/LogOutput.log` as mensagens `Eligible elite aspects`, `Skipping elite assignment`, `Equipped STARTING elite` e `No eligible elite aspects`.
+Se o plugin nem carregar, veja o [diagnóstico de bibliotecas BepInEx](docs/TROUBLESHOOTING.md). Se ele carregar mas o Q continuar vazio, verifique no `BepInEx/LogOutput.log` as mensagens `Eligible elite aspects`, `Waiting for character body`, `STARTING ELITE GRANTED`, `Elite grant failed`, `not the network server` ou `No eligible elite aspects`.
 
 ## Configuração
 

@@ -39,9 +39,10 @@ namespace GiveEliteItem
         private float nextScanTime;
         private bool emptyPoolLogged;
         private int runGeneration;
-        private readonly HashSet<CharacterMaster> reportedUnsupportedPlayers =
+        private readonly HashSet<CharacterMaster> reportedWaitingForBody =
             new HashSet<CharacterMaster>();
         private bool waitingForPlayersLogged;
+        private float nextAuthorityWarning;
 
         internal EliteRunDistributor(
             GiveEliteItem plugin, EliteSettings settings, ManualLogSource logger)
@@ -54,7 +55,15 @@ namespace GiveEliteItem
         internal void Tick()
         {
             if (!NetworkServer.active)
+            {
+                if (Run.instance != null && Time.unscaledTime >= nextAuthorityWarning)
+                {
+                    nextAuthorityWarning = Time.unscaledTime + 8f;
+                    logger.LogWarning("A run exists but this process is not the network server; " +
+                        "PlayWithEliteItem must be installed on the host.");
+                }
                 return;
+            }
 
             Run run = Run.instance;
             if (run == null)
@@ -114,26 +123,20 @@ namespace GiveEliteItem
                     continue;
 
                 Inventory inventory = master.inventory;
-                if (!IsSingleEquipmentLocation(inventory))
+
+                // Do not reject ordinary players based on an assumed slot/set
+                // count. The current game has different inventory layouts.
+                // Wait for the spawned body so the loadout cannot overwrite the grant.
+                CharacterBody body = master.GetBody();
+                if (body == null || body.inventory == null)
                 {
-                    if (reportedUnsupportedPlayers.Add(master))
-                    {
-                        logger.LogWarning("Skipping elite assignment for " +
-                            controller.networkUser.userName +
-                            ": equipmentSlotCount=" + inventory.equipmentSlotCount +
-                            ", equipmentSetCount=" + inventory.equipmentSetCount +
-                            ". The extra equipment location must be checked for this survivor.");
-                    }
+                    if (reportedWaitingForBody.Add(master))
+                        logger.LogInfo("Waiting for character body before giving elite to " +
+                            controller.networkUser.userName + ".");
                     continue;
                 }
 
-                // Wait until the playable body is actually present. Giving equipment
-                // before character initialization can cause the grant to be overwritten.
-                CharacterBody body = master.GetBody();
-                if (!EliteRotationRules.ShouldGrantAtSpawn(
-                    body != null && body.inventory != null,
-                    IsSingleEquipmentLocation(inventory),
-                    players.ContainsKey(master)))
+                if (!EliteRotationRules.ShouldGrantAtSpawn(true, true, players.ContainsKey(master)))
                     continue;
 
                 int chosen = AspectSelection.Choose(
@@ -152,23 +155,41 @@ namespace GiveEliteItem
                     HasReserve = previous.equipmentIndex != EquipmentIndex.None
                 };
 
-                // The elite must be ACTIVE on spawn to show in Q and grant its buff.
-                inventory.SetEquipment(
-                    new EquipmentState(elite, Run.FixedTimeStamp.positiveInfinity, 1, false),
-                    location.slot, location.set);
+                // Match the original 1.0.1 grant: use SetEquipmentIndexForSlot.
+                // For multi-set inventories, the active set may not be set 0;
+                // use the location-aware overload so Q displays the correct item.
+                if (location.set == 0u)
+                    inventory.SetEquipmentIndexForSlot(elite, location.slot);
+                else
+                    inventory.SetEquipment(
+                        new EquipmentState(elite, Run.FixedTimeStamp.positiveInfinity, 1, false),
+                        location.slot, location.set);
+
+                // Some equipment providers can replace the slot on spawn. Verify
+                // the result instead of recording a successful grant incorrectly.
+                if (inventory.GetEquipment(location).equipmentIndex != elite)
+                {
+                    inventory.SetEquipment(
+                        new EquipmentState(elite, Run.FixedTimeStamp.positiveInfinity, 1, false),
+                        location.slot, location.set);
+                }
 
                 if (inventory.GetEquipment(location).equipmentIndex != elite)
                 {
-                    logger.LogWarning("Failed to equip starting elite for " +
-                        controller.networkUser.userName + "; will retry.");
+                    logger.LogWarning("Elite grant failed for " +
+                        controller.networkUser.userName + ". Selected=" + elite +
+                        ", active location=" + location.slot + "/" + location.set +
+                        ", slots=" + inventory.equipmentSlotCount +
+                        ", sets=" + inventory.equipmentSetCount + ". Will retry.");
                     continue;
                 }
 
                 players.Add(master, state);
                 assignedAspects.Add(chosen);
                 EquipmentDef definition = EquipmentCatalog.GetEquipmentDef(elite);
-                logger.LogInfo("Equipped STARTING elite " + definition.name + " for " +
-                    controller.networkUser.userName + " in the active equipment slot.");
+                logger.LogInfo("STARTING ELITE GRANTED: " + definition.name +
+                    " to " + controller.networkUser.userName +
+                    " (active slot=" + location.slot + ", set=" + location.set + ").");
             }
 
             if (candidateControllers == 0 && !waitingForPlayersLogged)
@@ -208,8 +229,7 @@ namespace GiveEliteItem
                     runGeneration != expectedGeneration ||
                     master == null || master.inventory == null ||
                     !players.TryGetValue(master, out PlayerEquipment currentState) ||
-                    !ReferenceEquals(currentState, state) ||
-                    !IsSingleEquipmentLocation(master.inventory))
+                    !ReferenceEquals(currentState, state))
                     yield break;
 
                 Inventory inventory = master.inventory;
@@ -261,8 +281,7 @@ namespace GiveEliteItem
             Inventory inventory = body.inventory;
             PickupDef pickup = PickupCatalog.GetPickupDef(controller.pickup.pickupIndex);
 
-            if (pickup == null || pickup.equipmentIndex == EquipmentIndex.None ||
-                !IsSingleEquipmentLocation(inventory))
+            if (pickup == null || pickup.equipmentIndex == EquipmentIndex.None)
             {
                 orig(controller, body);
                 return;
@@ -329,14 +348,7 @@ namespace GiveEliteItem
             }
         }
 
-        private static bool IsSingleEquipmentLocation(Inventory inventory)
-        {
-            return inventory != null &&
-                inventory.equipmentSlotCount == 1 &&
-                inventory.equipmentSetCount == 1;
-        }
-
-        internal void Reset()
+         internal void Reset()
         {
             runGeneration++;
             activeRun = null;
@@ -344,7 +356,8 @@ namespace GiveEliteItem
             nextScanTime = 0f;
             emptyPoolLogged = false;
             waitingForPlayersLogged = false;
-            reportedUnsupportedPlayers.Clear();
+            reportedWaitingForBody.Clear();
+            nextAuthorityWarning = 0f;
             players.Clear();
             assignedAspects.Clear();
             availableAspects.Clear();

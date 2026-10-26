@@ -9,7 +9,7 @@ namespace GiveEliteItem
     {
         public const string PluginGuid = "AlchemyFlame.PlayWithEliteItem";
         public const string PluginName = "PlayWithEliteItem";
-        public const string PluginVersion = "1.1.4";
+        public const string PluginVersion = "1.1.5";
 
         private EliteRunDistributor distributor;
 

@@ -1,19 +1,19 @@
-# PlayWithEliteItem 1.1.4 — teste no Risk of Rain 2
+# PlayWithEliteItem 1.1.5 — teste no Risk of Rain 2
 
-A versão **1.1.2** armazenava o elite numa reserva invisível ao nascer. A **1.1.4** deve mostrar o elite no slot Q desde o início.
+A versão **1.1.2** armazenava o elite numa reserva invisível ao nascer. A **1.1.5** deve mostrar o elite no slot Q desde o início.
 
 ## Preparação
 
 1. Use um perfil com BepInExPack completo e somente o `GiveEliteItem.dll` mais recente.
-2. Baixe a DLL do GitHub Actions da versão **1.1.4**.
-3. Inicie pelo gerenciador e confirme `PlayWithEliteItem 1.1.4 loaded` no `BepInEx/LogOutput.log`.
+2. Baixe a DLL do GitHub Actions da versão **1.1.5**.
+3. Inicie pelo gerenciador e confirme `PlayWithEliteItem 1.1.5 loaded` no `BepInEx/LogOutput.log`.
 4. Opcional: ajuste `Diagnostics.VerboseLogging=true` e reinicie para investigar trocas.
 
 ## Teste principal
 
 - [ ] Entre numa partida solo com Mercenário ou outro personagem de um slot de equipamento.
 - [ ] **Imediatamente ao nascer, o elite aparece no Q e o buff/efeito de elite é aplicado.**
-- [ ] O log contém `Equipped STARTING elite ... in the active equipment slot.`
+- [ ] O log contém `STARTING ELITE GRANTED ... in the active equipment slot.`
 - [ ] Pegue o Radar Escaneador (ou outro equipamento). Ele deve substituir o elite no Q.
 - [ ] **O elite não deve cair no chão:** deve estar protegido na segunda reserva lógica.
 - [ ] Use o Radar. Após 0,3 segundo, o elite deve voltar ao Q, e o Radar ficará guardado.
@@ -29,8 +29,10 @@ Se o Q continuar vazio após o spawn, envie o log após iniciar a partida. Procu
 O mod aparecer na aba General do BepInEx confirma **apenas o carregamento**. Se o Q continuar vazio, use a aba **Console** e procure:
 
 - `No eligible elite aspects`: a lista de elites ficou vazia.
-- `Skipping elite assignment`: o inventário tem uma estrutura de slots/conjuntos não aceita pelo mod.
-- `Equipped STARTING elite`: o servidor concedeu o aspecto; se o Q continuar vazio, investigaremos a sincronização com o personagem/UI original.
+- `Waiting for character body`: ainda está aguardando o personagem nascer. 
+- `Elite grant failed`: a tentativa de colocar o equipamento no slot ativo falhou.
+- `not the network server`: o mod não está rodando no host.
+- `STARTING ELITE GRANTED`: o servidor concedeu o aspecto; se o Q continuar vazio, investigaremos a sincronização com o personagem/UI original.
 - `Run is active, but no PlayerCharacterMasterController`: ainda não foi encontrado um controlador de jogador.
 
 **Pegar um equipamento normal e vê-lo no Q não confirma o funcionamento do mod.** O teste começa verificando o elite ao nascer, *antes* de coletar qualquer item.
