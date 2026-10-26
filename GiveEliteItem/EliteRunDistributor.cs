@@ -24,6 +24,7 @@ namespace GiveEliteItem
             internal EquipmentState Reserve;
             internal bool HasReserve;
             internal bool SwapPending;
+            internal bool PhysicalSecondSlot;
             internal bool GrantCheckPending;
             internal float GrantTime;
         }
@@ -96,6 +97,163 @@ namespace GiveEliteItem
             }
         }
 
+        private const uint OriginalSecondSlot = 1u;
+
+        // 2024 original: SetEquipmentIndexForSlot(elite, 1), then read
+        // GetEquipment(0) and GetEquipment(1) during swapping.
+        // In 1.5 the inventory exposes explicit slot/set counts; never assume
+        // the legacy extra location exists or silently claim success.
+        private bool TryInitializePhysicalSecondSlot(
+            Inventory inventory, EquipmentIndex elite, PlayerEquipment state, string playerName)
+        {
+            if (!settings.PreferOriginalPhysicalSlot.Value)
+                return false;
+
+            EquipmentLocation activeLocation = inventory.activeEquipmentLocation;
+            if (activeLocation.slot == OriginalSecondSlot)
+                return false;
+
+            EquipmentIndex before = EquipmentIndex.None;
+            try
+            {
+                if (inventory.equipmentSlotCount > OriginalSecondSlot)
+                    before = inventory.GetEquipment(OriginalSecondSlot).equipmentIndex;
+
+                // If a character already owns its own second equipment slot,
+                // never replace an equipment belonging to the base game.
+                if (before != EquipmentIndex.None)
+                {
+                    Trace("LEGACY", "Slot 1 already occupied by " + before +
+                        "; preserving it, using virtual fallback.");
+                    return false;
+                }
+
+                Trace("LEGACY", "Trying original slot=1 for " + playerName +
+                    "; reportedSlots=" + inventory.equipmentSlotCount +
+                    " sets=" + inventory.equipmentSetCount);
+                inventory.SetEquipmentIndexForSlot(elite, OriginalSecondSlot);
+
+                EquipmentIndex result = inventory.GetEquipment(OriginalSecondSlot).equipmentIndex;
+                if (result != elite)
+                {
+                    logger.LogWarning("[PWEI][LEGACY] Physical slot 1 rejected " + elite +
+                        "; readback=" + result + ". Using virtual fallback.");
+                    return false;
+                }
+
+                state.PhysicalSecondSlot = true;
+                state.Reserve = inventory.GetEquipment(OriginalSecondSlot);
+                state.HasReserve = true;
+                Trace("LEGACY", "SUCCESS physical slot=1 elite=" + elite +
+                    " slotsAfter=" + inventory.equipmentSlotCount);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("[PWEI][LEGACY] Cannot use physical slot 1: " +
+                    ex.GetType().Name + " " + ex.Message +
+                    ". Falling back without claiming the extra slot worked.");
+                return false;
+            }
+        }
+
+        private EquipmentState ReadSecondEquipment(Inventory inventory, PlayerEquipment state)
+        {
+            return state.PhysicalSecondSlot ?
+                inventory.GetEquipment(OriginalSecondSlot) : state.Reserve;
+        }
+
+        private bool PhysicalSwap(
+            CharacterMaster master, PlayerEquipment state,
+            EquipmentState active, EquipmentLocation location)
+        {
+            Inventory inventory = master.inventory;
+            EquipmentState second = inventory.GetEquipment(OriginalSecondSlot);
+            if (second.equipmentIndex == EquipmentIndex.None)
+                return false;
+
+            if (second.equipmentIndex == state.EliteIndex)
+                ReleaseReservedBuff(master);
+
+            // Use the same slot 0 <-> 1 algorithm as 2024, preserving
+            // entire equipment state including cooldown and charge count.
+            inventory.SetEquipment(second, location.slot, location.set);
+            inventory.SetEquipment(active, OriginalSecondSlot, 0u);
+
+            bool committed =
+                inventory.GetEquipment(location).equipmentIndex == second.equipmentIndex &&
+                inventory.GetEquipment(OriginalSecondSlot).equipmentIndex == active.equipmentIndex;
+            if (!committed)
+            {
+                logger.LogWarning("[PWEI][LEGACY] Physical swap readback failed. " +
+                    "Attempting to restore the two previous equipment states.");
+                inventory.SetEquipment(active, location.slot, location.set);
+                inventory.SetEquipment(second, OriginalSecondSlot, 0u);
+                return false;
+            }
+
+            state.Reserve = inventory.GetEquipment(OriginalSecondSlot);
+            state.HasReserve = state.Reserve.equipmentIndex != EquipmentIndex.None;
+            SynchronizeReservedBuff(master, state);
+            Trace("LEGACY", "SWAP physical 0<->1 active=" +
+                inventory.GetEquipment(location).equipmentIndex +
+                " second=" + state.Reserve.equipmentIndex);
+            return true;
+        }
+
+        private void HandlePhysicalPickup(
+            On.RoR2.GenericPickupController.orig_AttemptGrant orig,
+            GenericPickupController controller, CharacterBody body,
+            PlayerEquipment state, PickupDef pickup, EquipmentLocation location)
+        {
+            Inventory inventory = body.inventory;
+            EquipmentState active = inventory.GetEquipment(location);
+            EquipmentState second = inventory.GetEquipment(OriginalSecondSlot);
+
+            // If elite is already in second slot, the ordinary pickup
+            // can use vanilla's normal active-slot replacement behavior.
+            if (active.equipmentIndex != state.EliteIndex || state.SwapPending)
+            {
+                orig(controller, body);
+                return;
+            }
+
+            // If elite was rotated to Q, move it back to the REAL second
+            // slot before allowing vanilla to replace/drop ordinary equipment.
+            inventory.SetEquipment(second, location.slot, location.set);
+            inventory.SetEquipment(active, OriginalSecondSlot, 0u);
+
+            if (inventory.GetEquipment(OriginalSecondSlot).equipmentIndex != state.EliteIndex)
+            {
+                logger.LogWarning("[PWEI][LEGACY] Failed to protect elite on pickup.");
+                inventory.SetEquipment(active, location.slot, location.set);
+                inventory.SetEquipment(second, OriginalSecondSlot, 0u);
+                return;
+            }
+
+            try
+            {
+                orig(controller, body);
+            }
+            finally
+            {
+                EquipmentIndex after = inventory.GetEquipment(location).equipmentIndex;
+                if (after != pickup.equipmentIndex &&
+                    after == second.equipmentIndex)
+                {
+                    // Pickup denied: restore the prior physical orientation.
+                    inventory.SetEquipment(active, location.slot, location.set);
+                    inventory.SetEquipment(second, OriginalSecondSlot, 0u);
+                }
+                state.Reserve = inventory.GetEquipment(OriginalSecondSlot);
+                state.HasReserve = state.Reserve.equipmentIndex != EquipmentIndex.None;
+                SynchronizeReservedBuff(body.master, state);
+                Trace("LEGACY", "PICKUP active=" +
+                    inventory.GetEquipment(location).equipmentIndex +
+                    " second=" + state.Reserve.equipmentIndex);
+            }
+        }
+
         // The virtual reserve retains EquipmentState but vanilla only derives
         // passive elite buffs from equipped gear. This controller grants the
         // corresponding VANILLA BuffDef while that elite is in reserve, and
@@ -133,6 +291,11 @@ namespace GiveEliteItem
 
             EquipmentLocation location = master.inventory.activeEquipmentLocation;
             EquipmentIndex equipped = master.inventory.GetEquipment(location).equipmentIndex;
+            if (state.PhysicalSecondSlot)
+            {
+                state.Reserve = ReadSecondEquipment(master.inventory, state);
+                state.HasReserve = state.Reserve.equipmentIndex != EquipmentIndex.None;
+            }
             bool reserveHasElite = state.HasReserve &&
                 state.Reserve.equipmentIndex == state.EliteIndex;
             bool shouldMaintain = EliteRotationRules.ShouldMaintainEliteBuff(
@@ -174,12 +337,20 @@ namespace GiveEliteItem
 
                 EquipmentLocation location = master.inventory.activeEquipmentLocation;
                 EquipmentIndex current = master.inventory.GetEquipment(location).equipmentIndex;
+                EquipmentIndex physicalSecond = state.PhysicalSecondSlot
+                    ? master.inventory.GetEquipment(OriginalSecondSlot).equipmentIndex
+                    : EquipmentIndex.None;
+                bool present = state.PhysicalSecondSlot
+                    ? physicalSecond == state.EliteIndex
+                    : current == state.EliteIndex;
                 Trace("VERIFY", "Master=" + master.name + " expectedElite=" +
-                    state.EliteIndex + " current=" + current +
-                    " location=" + location.slot + "/" + location.set);
-                if (current != state.EliteIndex)
-                    logger.LogWarning("[PWEI][VERIFY] Starting elite is no longer active 1.5s " +
-                        "after grant (another mod, a pickup or game initialization may have changed it).");
+                    state.EliteIndex + " active=" + current +
+                    " physicalSlot1=" + physicalSecond +
+                    " location=" + location.slot + "/" + location.set +
+                    " mode=" + (state.PhysicalSecondSlot ? "physical" : "virtual"));
+                if (!present)
+                    logger.LogWarning("[PWEI][VERIFY] Elite equipment no longer resides " +
+                        "in the expected inventory location 1.5s after grant.");
             }
         }
 
@@ -323,11 +494,28 @@ namespace GiveEliteItem
                 var state = new PlayerEquipment
                 {
                     EliteIndex = elite,
-                    // Preserve equipment supplied by another mod, rather than
-                    // silently deleting it when the elite is equipped.
+                    // Virtual fallback keeps old equipment safe.
                     Reserve = previous,
                     HasReserve = previous.equipmentIndex != EquipmentIndex.None
                 };
+
+                // Preserve the 2024 method FIRST. The physical slot is only
+                // selected when it can be read back successfully.
+                if (TryInitializePhysicalSecondSlot(
+                    inventory, elite, state, controller.networkUser.userName))
+                {
+                    state.GrantTime = Time.unscaledTime;
+                    state.GrantCheckPending = true;
+                    players.Add(master, state);
+                    assignedAspects.Add(chosen);
+                    Trace("GRANT", "SUCCESS physical second slot index=" + elite +
+                        " active=" + previous.equipmentIndex + " second=" +
+                        inventory.GetEquipment(OriginalSecondSlot).equipmentIndex);
+                    continue;
+                }
+
+                // Fallback: if the game cannot address a physical slot 1,
+                // keep the current virtual-reserve behavior.
 
                 // Match the original 1.0.1 grant: use SetEquipmentIndexForSlot.
                 // For multi-set inventories, the active set may not be set 0;
@@ -398,7 +586,8 @@ namespace GiveEliteItem
             }
         }
 
-        internal void OnEquipmentActivated(CharacterMaster master, EquipmentDef activated)
+        internal void OnEquipmentActivated(
+            CharacterMaster master, EquipmentDef activated, bool actionSucceeded)
         {
             if (!NetworkServer.active || !settings.Enabled.Value ||
                 !settings.AutomaticSwapAfterUse.Value || activeRun == null ||
@@ -406,10 +595,20 @@ namespace GiveEliteItem
                 !players.TryGetValue(master, out PlayerEquipment state))
                 return;
 
+            // The original 2024 hook queued the swap BEFORE checking the
+            // return value of PerformEquipmentAction. Elite equipment is
+            // passive and activation can return false; still allow the player
+            // to rotate back to their normal equipment by pressing Q.
+            EquipmentIndex current = master.inventory.GetEquipment(
+                master.inventory.activeEquipmentLocation).equipmentIndex;
+            bool canRotate = actionSucceeded ||
+                (current == state.EliteIndex && activated.equipmentIndex == state.EliteIndex);
+
             if (!EliteRotationRules.ShouldRotate(
-                true, state.HasReserve, state.SwapPending))
+                canRotate, state.HasReserve, state.SwapPending))
             {
-                Trace("USE", "Activation ignored: reserve=" + state.HasReserve +
+                Trace("USE", "Activation ignored: succeeded=" + actionSucceeded +
+                    " reserve=" + state.HasReserve +
                     " pending=" + state.SwapPending + " equipment=" + activated.name);
                 return;
             }
@@ -446,9 +645,17 @@ namespace GiveEliteItem
                     equipped.equipmentIndex == activatedIndex, state.HasReserve))
                     yield break;
 
-                EquipmentState next = state.Reserve;
+                EquipmentState next = ReadSecondEquipment(inventory, state);
                 if (next.equipmentIndex == EquipmentIndex.None)
                     yield break;
+
+                if (state.PhysicalSecondSlot)
+                {
+                    bool swapped = PhysicalSwap(master, state, equipped, location);
+                    if (!swapped)
+                        logger.LogWarning("[PWEI][LEGACY] Physical swap aborted.");
+                    yield break;
+                }
 
                 if (next.equipmentIndex == state.EliteIndex)
                     ReleaseReservedBuff(master);
@@ -502,7 +709,14 @@ namespace GiveEliteItem
                 " activeBefore=" + active.equipmentIndex +
                 " reserve=" + state.Reserve.equipmentIndex +
                 " reservePresent=" + state.HasReserve +
-                " pendingSwap=" + state.SwapPending);
+                " pendingSwap=" + state.SwapPending +
+                " mode=" + (state.PhysicalSecondSlot ? "physical" : "virtual"));
+
+            if (state.PhysicalSecondSlot)
+            {
+                HandlePhysicalPickup(orig, controller, body, state, pickup, location);
+                return;
+            }
 
             if (!EliteRotationRules.ShouldProtectElitePickup(
                 state.SwapPending,

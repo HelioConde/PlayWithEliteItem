@@ -1,23 +1,23 @@
-# PlayWithEliteItem 1.1.8 — teste no Risk of Rain 2
+# PlayWithEliteItem 1.1.9 — teste no Risk of Rain 2
 
-A versão **1.1.2** armazenava o elite numa reserva invisível ao nascer. A **1.1.8** deve mostrar o elite no slot Q desde o início.
+A versão **1.1.9** tenta o método ORIGINAL de 2024: elite no slot físico 1 e equipamento comum no 0. O Q pode começar vazio. Se o slot 1 não existir, o log `[PWEI][LEGACY]` mostrará o fallback.
 
 ## Preparação
 
 1. Use um perfil com **BepInExPack e HookGenPatcher 1.2.9**, além de somente um `GiveEliteItem.dll`.
-2. Baixe a DLL do GitHub Actions da versão **1.1.8**.
+2. Baixe a DLL do GitHub Actions da versão **1.1.9**.
 3. Inicie pelo gerenciador e confirme **`[PWEI][BOOT]`** no `BepInEx/LogOutput.log`. O mod aparecer na aba General, sozinho, não confirma que o `Awake()` foi executado.
 4. O novo `Diagnostics.TraceGameplay=true` já ativa os logs de investigação por padrão; mantenha-o ligado durante o teste.
 
 ## Teste principal
 
 - [ ] Entre numa partida solo com Mercenário ou outro personagem de um slot de equipamento.
-- [ ] **Imediatamente ao nascer, o elite aparece no Q e o buff/efeito de elite é aplicado.**
-- [ ] O log contém `[PWEI][GRANT] SUCCESS ...`
-- [ ] Pegue o Radar Escaneador (ou outro equipamento). Ele deve substituir o elite no Q.
+- [ ] **Ao nascer, confira `[PWEI][LEGACY] SUCCESS physical slot=1` no log.** No modo físico o Q pode estar vazio; observe o efeito elite e a coleta posterior.
+- [ ] O log contém `[PWEI][GRANT] SUCCESS physical second slot` ou explica o fallback.
+- [ ] Pegue o Radar Escaneador (ou outro equipamento). Ele deve ocupar o Q, enquanto o elite permanece no slot físico 1.
 - [ ] **O elite não deve cair no chão:** deve estar protegido na segunda reserva lógica.
 - [ ] O efeito visual/passivo elite deve permanecer enquanto outro equipamento está no Q.
-- [ ] Verifique no log `[PWEI][BUFF] APPLIED` após a coleta; no retorno para o Q procure `[PWEI][BUFF] RELEASE`.
+- [ ] Verifique no log `[PWEI][LEGACY] SWAP physical 0<->1` após uso do equipamento, ou `[PWEI][SWAP]` no fallback. Também confira `[PWEI][BUFF]` para o efeito passivo.
 - [ ] Verifique também troca de fase, morte/renascimento e ausência de buffs duplicados.
 - [ ] Use o Radar. Após 0,3 segundo, o elite deve voltar ao Q, e o Radar ficará guardado.
 - [ ] Verifique que não existem duplicações ou perdas de equipamentos ao coletar outros itens.
@@ -42,7 +42,7 @@ O mod aparecer na aba General do BepInEx confirma **apenas o carregamento**. Se 
 
 Salve e envie o `LogOutput.log` da **mesma partida** para determinar a causa com precisão.
 
-## Diagnóstico novo da versão 1.1.8
+## Diagnóstico novo da versão 1.1.9
 
 Abra o **BepInEx/LogOutput.log** após entrar numa partida nova. Pesquise `[PWEI]` para ver o fluxo do mod:
 

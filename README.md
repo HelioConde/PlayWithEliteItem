@@ -2,23 +2,23 @@
 
 **Risk of Rain 2 · Equipamento de elite no segundo slot · Server-side · C#**
 
-Mod de AlchemyFlame que concede um equipamento de elite ao nascer e permite guardar outro equipamento no servidor. **A versão 1.1.8 corrige a dependência ausente `MMHOOK_RoR2.dll`**: o código anterior não chegou a iniciar no seu jogo. A novidade é manter o buff de elite enquanto o equipamento fica na reserva do servidor.
+Mod de AlchemyFlame que concede um equipamento de elite ao nascer e permite guardar outro equipamento no servidor. **A versão 1.1.9 corrige a dependência ausente `MMHOOK_RoR2.dll`**: o código anterior não chegou a iniciar no seu jogo. A versão 1.1.9 volta a **testar primeiro o segundo slot físico (índice 1)** do código original de 2024. Se a versão atual do jogo não permitir acessar esse slot, usa a reserva virtual como fallback e explica isso no log.
 
 [Versão pública no Thunderstore](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar DLL de teste](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Roteiro de testes](docs/TESTE_NO_JOGO.md)
 
-> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.8. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
+> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.9. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
 
 ## Como funciona
 
-1. Quando o personagem aparece no mapa, o servidor escolhe e equipa um aspecto elite **no slot ativo Q**. O ícone elite deve aparecer imediatamente, com seu efeito passivo.
-2. Ao pegar um equipamento, como o **Radar Escaneador**, o novo equipamento ocupa o Q e o elite vai para o **segundo slot lógico** (reserva). **O elite não deve cair no chão.**
+1. Ao nascer, o mod tenta conceder o elite diretamente ao **slot físico 1**, como na versão original de 2024. O Q (slot 0) pode começar vazio. O log confirma se o segundo slot existe e aceitou o elite.
+2. Pegue um equipamento normal: o jogo mantém esse equipamento no Q (slot 0), enquanto o elite fica no segundo slot físico. Se a API atual rejeitar o slot 1, o mod volta à reserva virtual e equipa o elite no Q para preservar a jogabilidade.
 3. Enquanto o elite está na reserva, o mod mantém seu **efeito passivo** no personagem usando o BuffDef original do jogo.
 4. Depois de **usar com sucesso** o equipamento ativo, o servidor aguarda **0,3 segundo** e troca o equipamento ativo pelo armazenado, preservando o estado de cargas e recarga.
 5. Se o elite estiver ativo quando o jogador coletar outro equipamento, o mod tenta guardar o elite novamente e deixa a coleta substituir o equipamento normal.
 
 **Importante:** a reserva é **virtual, no servidor**, não um segundo quadrado visível na HUD. O elite deve aparecer no Q ao nascer. Depois de coletar outro equipamento, ficará guardado (seu efeito passivo será **mantido pelo servidor** enquanto estiver na reserva).
 
-Não interceptamos inventários de múltiplos slots/conjuntos, como MUL-T e Functional Coupler, até validar sua compatibilidade. Aspectos elite em geral **não podem ser ativados**. Como a troca ainda depende de um uso bem-sucedido, um elite que volte ao slot ativo pode impedir que o Radar seja recuperado por ativação. Esta é uma **limitação conhecida ainda pendente de solução**.
+Personagens ou itens com múltiplos slots, como MUL-T e Functional Coupler, exigem testes próprios; a v1.1.9 é experimental nesses casos. Aspectos elite em geral **não podem ser ativados**. Como a troca ainda depende de um uso bem-sucedido, um elite que volte ao slot ativo pode impedir que o Radar seja recuperado por ativação. Esta é uma **limitação conhecida ainda pendente de solução**.
 
 ## Instalação da versão de teste
 
@@ -41,7 +41,8 @@ O BepInEx cria `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg` após carrega
 | `Distribution.IncludeAllRegisteredEliteAspects` | false | Inclui aspectos extras registrados |
 | `Distribution.AllowedEliteEquipment` | Sete elites clássicas | Nomes internos separados por vírgula |
 | `Switching.AutomaticSwapAfterUse` | true | Habilita a troca automática |
-| `Elite.KeepEliteBuffWhileReserved` | **true** | Mantém o BuffDef passivo quando o elite fica guardado |
+| `Equipment.PreferOriginalPhysicalSlot` | **true** | Tenta usar diretamente o slot físico 1, como o código de 2024 |
+| `Elite.KeepEliteBuffWhileReserved` | **true** | Mantém o BuffDef passivo quando o jogo não o fornece ao elite guardado |
 | `Switching.SwapDelaySeconds` | 0.3 | Atraso da troca, de 0 a 2 segundos |
 | `Diagnostics.VerboseLogging` | false | Mensagens extras opcionais |
 | `Diagnostics.TraceGameplay` | **true** | Diagnóstico de inicialização, catálogo, jogador, concessão e troca; limitado para não inundar o log |

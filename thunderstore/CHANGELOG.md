@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.9 — Original physical slot restoration experiment (not published)
+
+- Revisit the original 2024 implementation and its `SetEquipmentIndexForSlot(elite, 1)` call.
+- Attempt to place the elite in real equipment slot 1 on spawn; read it back before considering the grant successful.
+- Swap equipment states between physical slots 0 and 1 after a use, preserving cooldowns/charges.
+- Allow a Q press on the passive elite equipment to swap back, even when PerformEquipmentAction returns false.
+- Protect physical slot 1 during an ordinary equipment pickup.
+- If the current RoR2 inventory rejects slot 1, log the reason and fall back to the previous server-side virtual reserve.
+- Keep all logic server-side without HUD or custom RPCs. Gameplay acceptance test is still required.
+
 ## 1.1.8 — Experimental elite effect while reserved (not published)
 
 - The live log confirmed the elite was stored in the virtual reserve, not dropped.

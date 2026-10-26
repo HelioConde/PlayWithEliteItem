@@ -18,6 +18,7 @@ namespace GiveEliteItem
         internal readonly ConfigEntry<bool> VerboseLogging;
         internal readonly ConfigEntry<bool> TraceGameplay;
         internal readonly ConfigEntry<bool> KeepEliteBuffWhileReserved;
+        internal readonly ConfigEntry<bool> PreferOriginalPhysicalSlot;
 
         internal EliteSettings(ConfigFile config)
         {
@@ -36,6 +37,10 @@ namespace GiveEliteItem
             AllowedEliteEquipment = config.Bind(
                 "Distribution", "AllowedEliteEquipment", ClassicAspects,
                 "Comma-separated internal names used when catalog discovery is disabled.");
+
+            PreferOriginalPhysicalSlot = config.Bind(
+                "Equipment", "PreferOriginalPhysicalSlot", true,
+                "Try the 2024 technique of assigning the elite directly to physical equipment slot 1. If unavailable, fall back to the virtual reserve.");
 
             KeepEliteBuffWhileReserved = config.Bind(
                 "Elite", "KeepEliteBuffWhileReserved", true,

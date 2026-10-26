@@ -9,7 +9,7 @@ namespace GiveEliteItem
     {
         public const string PluginGuid = "AlchemyFlame.PlayWithEliteItem";
         public const string PluginName = "PlayWithEliteItem";
-        public const string PluginVersion = "1.1.8";
+        public const string PluginVersion = "1.1.9";
 
         private EliteRunDistributor distributor;
 
@@ -38,8 +38,9 @@ namespace GiveEliteItem
             EquipmentSlot equipmentSlot, EquipmentDef equipmentDef)
         {
             bool success = orig(equipmentSlot, equipmentDef);
-            if (success && equipmentSlot != null && equipmentSlot.characterBody != null)
-                distributor?.OnEquipmentActivated(equipmentSlot.characterBody.master, equipmentDef);
+            if (equipmentSlot != null && equipmentSlot.characterBody != null)
+                distributor?.OnEquipmentActivated(
+                    equipmentSlot.characterBody.master, equipmentDef, success);
 
             return success;
         }
