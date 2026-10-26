@@ -17,6 +17,10 @@ namespace GiveEliteItem
             bool pending, bool activeIsElite, bool supportedInventory)
             => !pending && activeIsElite && supportedInventory;
 
+        internal static bool ShouldMaintainEliteBuff(
+            bool enabled, bool reserveHasElite, bool eliteIsActive, bool bodyExists)
+            => enabled && reserveHasElite && !eliteIsActive && bodyExists;
+
         internal static bool CanCommitSwap(
             bool sameRun, bool samePlayer, bool activeUnchanged, bool hasReserve)
             => sameRun && samePlayer && activeUnchanged && hasReserve;

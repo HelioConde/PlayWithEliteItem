@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.8 — Experimental elite effect while reserved (not published)
+
+- The live log confirmed the elite was stored in the virtual reserve, not dropped.
+- Maintain the original elite BuffDef on the server while the aspect is in reserve.
+- Relinquish the injected buff when the elite is equipped again or a run ends.
+- Track owner body to handle respawns; continue using vanilla buff replication.
+- Add Elite.KeepEliteBuffWhileReserved=true and tests for buff-ownership conditions.
+- No custom UI, client RPCs or new content; gameplay verification required.
+
 ## 1.1.7 — Corrige dependência em tempo de execução (candidato, não publicado)
 
 - Declara HookGenPatcher 1.2.9 como dependência junto ao BepInExPack.

@@ -1,11 +1,11 @@
-# PlayWithEliteItem 1.1.7 — teste no Risk of Rain 2
+# PlayWithEliteItem 1.1.8 — teste no Risk of Rain 2
 
-A versão **1.1.2** armazenava o elite numa reserva invisível ao nascer. A **1.1.7** deve mostrar o elite no slot Q desde o início.
+A versão **1.1.2** armazenava o elite numa reserva invisível ao nascer. A **1.1.8** deve mostrar o elite no slot Q desde o início.
 
 ## Preparação
 
 1. Use um perfil com **BepInExPack e HookGenPatcher 1.2.9**, além de somente um `GiveEliteItem.dll`.
-2. Baixe a DLL do GitHub Actions da versão **1.1.7**.
+2. Baixe a DLL do GitHub Actions da versão **1.1.8**.
 3. Inicie pelo gerenciador e confirme **`[PWEI][BOOT]`** no `BepInEx/LogOutput.log`. O mod aparecer na aba General, sozinho, não confirma que o `Awake()` foi executado.
 4. O novo `Diagnostics.TraceGameplay=true` já ativa os logs de investigação por padrão; mantenha-o ligado durante o teste.
 
@@ -16,6 +16,9 @@ A versão **1.1.2** armazenava o elite numa reserva invisível ao nascer. A **1.
 - [ ] O log contém `[PWEI][GRANT] SUCCESS ...`
 - [ ] Pegue o Radar Escaneador (ou outro equipamento). Ele deve substituir o elite no Q.
 - [ ] **O elite não deve cair no chão:** deve estar protegido na segunda reserva lógica.
+- [ ] O efeito visual/passivo elite deve permanecer enquanto outro equipamento está no Q.
+- [ ] Verifique no log `[PWEI][BUFF] APPLIED` após a coleta; no retorno para o Q procure `[PWEI][BUFF] RELEASE`.
+- [ ] Verifique também troca de fase, morte/renascimento e ausência de buffs duplicados.
 - [ ] Use o Radar. Após 0,3 segundo, o elite deve voltar ao Q, e o Radar ficará guardado.
 - [ ] Verifique que não existem duplicações ou perdas de equipamentos ao coletar outros itens.
 - [ ] Confirme recargas, mudança de fase, respawn, multiplayer com cliente vanilla e entrada tardia.
@@ -39,7 +42,7 @@ O mod aparecer na aba General do BepInEx confirma **apenas o carregamento**. Se 
 
 Salve e envie o `LogOutput.log` da **mesma partida** para determinar a causa com precisão.
 
-## Diagnóstico novo da versão 1.1.7
+## Diagnóstico novo da versão 1.1.8
 
 Abra o **BepInEx/LogOutput.log** após entrar numa partida nova. Pesquise `[PWEI]` para ver o fluxo do mod:
 

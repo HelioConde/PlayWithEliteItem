@@ -17,6 +17,7 @@ namespace GiveEliteItem
         internal readonly ConfigEntry<float> SwapDelaySeconds;
         internal readonly ConfigEntry<bool> VerboseLogging;
         internal readonly ConfigEntry<bool> TraceGameplay;
+        internal readonly ConfigEntry<bool> KeepEliteBuffWhileReserved;
 
         internal EliteSettings(ConfigFile config)
         {
@@ -35,6 +36,10 @@ namespace GiveEliteItem
             AllowedEliteEquipment = config.Bind(
                 "Distribution", "AllowedEliteEquipment", ClassicAspects,
                 "Comma-separated internal names used when catalog discovery is disabled.");
+
+            KeepEliteBuffWhileReserved = config.Bind(
+                "Elite", "KeepEliteBuffWhileReserved", true,
+                "Apply the vanilla passive elite buff while the elite equipment is stored in the server reserve.");
 
             AutomaticSwapAfterUse = config.Bind(
                 "Switching", "AutomaticSwapAfterUse", true,

@@ -96,6 +96,66 @@ namespace GiveEliteItem
             }
         }
 
+        // The virtual reserve retains EquipmentState but vanilla only derives
+        // passive elite buffs from equipped gear. This controller grants the
+        // corresponding VANILLA BuffDef while that elite is in reserve, and
+        // relinquishes ownership before it is equipped again.
+        private sealed class EliteBuffOwner
+        {
+            internal CharacterBody Body;
+            internal BuffDef Buff;
+        }
+
+        private readonly Dictionary<CharacterMaster, EliteBuffOwner> buffOwners =
+            new Dictionary<CharacterMaster, EliteBuffOwner>();
+
+        private void ReleaseReservedBuff(CharacterMaster master)
+        {
+            if (!buffOwners.TryGetValue(master, out EliteBuffOwner owner))
+                return;
+
+            buffOwners.Remove(master);
+            if (owner.Body != null && owner.Buff != null && owner.Body.HasBuff(owner.Buff))
+            {
+                owner.Body.RemoveBuff(owner.Buff);
+                Trace("BUFF", "RELEASE buff=" + owner.Buff.name + " master=" + master.name);
+            }
+        }
+
+        private void SynchronizeReservedBuff(CharacterMaster master, PlayerEquipment state)
+        {
+            CharacterBody body = master != null ? master.GetBody() : null;
+            if (buffOwners.TryGetValue(master, out EliteBuffOwner oldOwner) && oldOwner.Body != body)
+                ReleaseReservedBuff(master);
+
+            if (body == null || master.inventory == null)
+                return;
+
+            EquipmentLocation location = master.inventory.activeEquipmentLocation;
+            EquipmentIndex equipped = master.inventory.GetEquipment(location).equipmentIndex;
+            bool reserveHasElite = state.HasReserve &&
+                state.Reserve.equipmentIndex == state.EliteIndex;
+            bool shouldMaintain = EliteRotationRules.ShouldMaintainEliteBuff(
+                settings.KeepEliteBuffWhileReserved.Value,
+                reserveHasElite, equipped == state.EliteIndex, body != null);
+
+            EquipmentDef equipment = EquipmentCatalog.GetEquipmentDef(state.EliteIndex);
+            BuffDef buff = equipment != null ? equipment.passiveBuffDef : null;
+            if (!shouldMaintain || buff == null || !buff.isElite)
+            {
+                ReleaseReservedBuff(master);
+                return;
+            }
+
+            if (!body.HasBuff(buff))
+            {
+                body.AddBuff(buff);
+                buffOwners[master] = new EliteBuffOwner { Body = body, Buff = buff };
+                Trace("BUFF", "APPLIED elite=" + equipment.name +
+                    " active=" + equipped + " reserve=" + state.Reserve.equipmentIndex);
+            }
+        }
+
         private void VerifyGrantedEquipment()
         {
             foreach (var player in players)
@@ -320,6 +380,9 @@ namespace GiveEliteItem
                 logger.LogWarning("[PWEI][PLAYER] No PlayerCharacterMasterController instances in run.");
             }
 
+            foreach (var assigned in players)
+                SynchronizeReservedBuff(assigned.Key, assigned.Value);
+
             VerifyGrantedEquipment();
             if (Time.unscaledTime >= nextStatusLog)
             {
@@ -387,6 +450,9 @@ namespace GiveEliteItem
                 if (next.equipmentIndex == EquipmentIndex.None)
                     yield break;
 
+                if (next.equipmentIndex == state.EliteIndex)
+                    ReleaseReservedBuff(master);
+
                 inventory.SetEquipment(next, location.slot, location.set);
                 if (inventory.GetEquipment(location).equipmentIndex != next.equipmentIndex)
                 {
@@ -396,6 +462,7 @@ namespace GiveEliteItem
 
                 state.Reserve = equipped;
                 state.HasReserve = equipped.equipmentIndex != EquipmentIndex.None;
+                SynchronizeReservedBuff(master, state);
 
                 Trace("SWAP", "SUCCESS activeBefore=" + equipped.equipmentIndex +
                     " activeAfter=" + next.equipmentIndex +
@@ -481,6 +548,10 @@ namespace GiveEliteItem
                     state.GrantCheckPending = false;
                     Trace("PICKUP", "SUCCESS activeNow=" + result.equipmentIndex +
                         " eliteStored=" + state.Reserve.equipmentIndex);
+                    SynchronizeReservedBuff(body.master, state);
+                    Trace("BUFF", "PICKUP after sync: hasEliteBuff=" +
+                        (EquipmentCatalog.GetEquipmentDef(state.EliteIndex).passiveBuffDef != null &&
+                         body.HasBuff(EquipmentCatalog.GetEquipmentDef(state.EliteIndex).passiveBuffDef)));
                 }
                 else
                 {
@@ -512,6 +583,8 @@ namespace GiveEliteItem
             catalogDiagnosticsLogged = false;
             nextCatalogDiagnosticTime = 0f;
             reportedGrantFailures.Clear();
+            foreach (CharacterMaster master in new List<CharacterMaster>(buffOwners.Keys))
+                ReleaseReservedBuff(master);
             players.Clear();
             assignedAspects.Clear();
             availableAspects.Clear();

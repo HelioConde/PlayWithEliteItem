@@ -2,20 +2,21 @@
 
 **Risk of Rain 2 · Equipamento de elite no segundo slot · Server-side · C#**
 
-Mod de AlchemyFlame que concede um equipamento de elite ao nascer e permite guardar outro equipamento no servidor. **A versão 1.1.7 corrige a dependência ausente `MMHOOK_RoR2.dll`**: o código anterior não chegou a iniciar no seu jogo. A mecânica de gameplay permanece igual à 1.1.6.
+Mod de AlchemyFlame que concede um equipamento de elite ao nascer e permite guardar outro equipamento no servidor. **A versão 1.1.8 corrige a dependência ausente `MMHOOK_RoR2.dll`**: o código anterior não chegou a iniciar no seu jogo. A novidade é manter o buff de elite enquanto o equipamento fica na reserva do servidor.
 
 [Versão pública no Thunderstore](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar DLL de teste](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Roteiro de testes](docs/TESTE_NO_JOGO.md)
 
-> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.7. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
+> **Publicada:** 1.0.1 · **Em testes no GitHub:** 1.1.8. O código novo **não foi testado em uma partida real**. Não faça upload no Thunderstore antes de validar com o jogo.
 
 ## Como funciona
 
 1. Quando o personagem aparece no mapa, o servidor escolhe e equipa um aspecto elite **no slot ativo Q**. O ícone elite deve aparecer imediatamente, com seu efeito passivo.
 2. Ao pegar um equipamento, como o **Radar Escaneador**, o novo equipamento ocupa o Q e o elite vai para o **segundo slot lógico** (reserva). **O elite não deve cair no chão.**
-3. Depois de **usar com sucesso** o equipamento ativo, o servidor aguarda **0,3 segundo** e troca o equipamento ativo pelo armazenado, preservando o estado de cargas e recarga.
-4. Se o elite estiver ativo quando o jogador coletar outro equipamento, o mod tenta guardar o elite novamente e deixa a coleta substituir o equipamento normal.
+3. Enquanto o elite está na reserva, o mod mantém seu **efeito passivo** no personagem usando o BuffDef original do jogo.
+4. Depois de **usar com sucesso** o equipamento ativo, o servidor aguarda **0,3 segundo** e troca o equipamento ativo pelo armazenado, preservando o estado de cargas e recarga.
+5. Se o elite estiver ativo quando o jogador coletar outro equipamento, o mod tenta guardar o elite novamente e deixa a coleta substituir o equipamento normal.
 
-**Importante:** a reserva é **virtual, no servidor**, não um segundo quadrado visível na HUD. O elite deve aparecer no Q ao nascer. Depois de coletar outro equipamento, ficará guardado (e seu efeito passivo **não ficará ativo** enquanto estiver na reserva).
+**Importante:** a reserva é **virtual, no servidor**, não um segundo quadrado visível na HUD. O elite deve aparecer no Q ao nascer. Depois de coletar outro equipamento, ficará guardado (seu efeito passivo será **mantido pelo servidor** enquanto estiver na reserva).
 
 Não interceptamos inventários de múltiplos slots/conjuntos, como MUL-T e Functional Coupler, até validar sua compatibilidade. Aspectos elite em geral **não podem ser ativados**. Como a troca ainda depende de um uso bem-sucedido, um elite que volte ao slot ativo pode impedir que o Radar seja recuperado por ativação. Esta é uma **limitação conhecida ainda pendente de solução**.
 
@@ -40,6 +41,7 @@ O BepInEx cria `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg` após carrega
 | `Distribution.IncludeAllRegisteredEliteAspects` | false | Inclui aspectos extras registrados |
 | `Distribution.AllowedEliteEquipment` | Sete elites clássicas | Nomes internos separados por vírgula |
 | `Switching.AutomaticSwapAfterUse` | true | Habilita a troca automática |
+| `Elite.KeepEliteBuffWhileReserved` | **true** | Mantém o BuffDef passivo quando o elite fica guardado |
 | `Switching.SwapDelaySeconds` | 0.3 | Atraso da troca, de 0 a 2 segundos |
 | `Diagnostics.VerboseLogging` | false | Mensagens extras opcionais |
 | `Diagnostics.TraceGameplay` | **true** | Diagnóstico de inicialização, catálogo, jogador, concessão e troca; limitado para não inundar o log |

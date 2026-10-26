@@ -106,6 +106,17 @@ internal static class Program
         Check(!EliteRotationRules.ShouldProtectElitePickup(false, true, false),
             "extra-slot inventory remains vanilla");
 
+        Check(EliteRotationRules.ShouldMaintainEliteBuff(true, true, false, true),
+            "reserved elite retains its passive while other equipment is in Q");
+        Check(!EliteRotationRules.ShouldMaintainEliteBuff(false, true, false, true),
+            "reserve-buff compatibility setting can disable the feature");
+        Check(!EliteRotationRules.ShouldMaintainEliteBuff(true, false, false, true),
+            "no elite in reserve means no injected buff");
+        Check(!EliteRotationRules.ShouldMaintainEliteBuff(true, true, true, true),
+            "active elite buff is provided by the game without duplication");
+        Check(!EliteRotationRules.ShouldMaintainEliteBuff(true, true, false, false),
+            "no character body means no buff to apply");
+
         Check(EliteRotationRules.CanCommitSwap(true, true, true, true),
             "same run, master and equipment allows swap");
         Check(!EliteRotationRules.CanCommitSwap(false, true, true, true),

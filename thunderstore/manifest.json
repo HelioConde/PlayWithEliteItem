@@ -1,8 +1,8 @@
 {
   "name": "PlayWithEliteItem",
-  "version_number": "1.1.7",
+  "version_number": "1.1.8",
   "website_url": "https://github.com/HelioConde/PlayWithEliteItem",
-  "description": "Concede elite ao nascer e preserva um segundo equipamento, com troca apos o uso. Mod server-side.",
+  "description": "Elite ao nascer e segundo equipamento reservado com efeito passivo mantido pelo servidor.",
   "dependencies": [
     "bbepis-BepInExPack-5.4.2122",
     "RiskofThunder-HookGenPatcher-1.2.9"
