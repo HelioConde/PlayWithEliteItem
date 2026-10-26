@@ -10,14 +10,16 @@ namespace GiveEliteItem
     /// <summary>
     /// Original 2024 technique, simplified after the October 2026 gameplay test:
     /// put the elite in physical slot 1 and NEVER rotate it into active slot 0.
-    /// RoR2 keeps the elite passive active from the real secondary slot.
-    /// No custom HUD, extra buff injection, inventory pickup hook or RPC.
+    /// Risk of Rain 2 does NOT automatically maintain all elite passive buffs
+    /// for an inactive second slot. Maintain its existing BuffDef on the
+    /// server, without changing the equipment slots or adding a custom HUD/RPC.
     /// </summary>
     internal sealed class EliteRunDistributor
     {
         private const uint EliteEquipmentSlot = 1u;
         private const float ScanInterval = 0.5f;
         private const float StatusInterval = 10f;
+        private const float PassiveCheckInterval = 0.1f;
 
         private sealed class PlayerAssignment
         {
@@ -25,6 +27,10 @@ namespace GiveEliteItem
             internal float GrantedAt;
             internal bool NeedsVerification = true;
             internal bool LostEliteReported;
+            internal CharacterBody InjectedBody;
+            internal BuffDef InjectedBuff;
+            internal bool MissingBuffReported;
+            internal int Reapplications;
         }
 
         private readonly EliteSettings settings;
@@ -41,6 +47,7 @@ namespace GiveEliteItem
         private Run currentRun;
         private System.Random random;
         private float nextScan;
+        private float nextPassiveCheck;
         private float nextStatus;
         private bool missingCatalogReported;
         private bool catalogListed;
@@ -55,6 +62,95 @@ namespace GiveEliteItem
         {
             if (settings.TraceGameplay.Value)
                 logger.LogInfo("[PWEI][" + type + "] " + message);
+        }
+
+        /// <summary>
+        /// Tracks ONLY the buff this mod injected, so cleanup does not remove
+        /// buffs from unrelated equipment or other mods.
+        /// </summary>
+        private void ReleaseOwnedPassive(PlayerAssignment assignment)
+        {
+            if (assignment.InjectedBody != null && assignment.InjectedBuff != null &&
+                assignment.InjectedBody.HasBuff(assignment.InjectedBuff))
+            {
+                assignment.InjectedBody.RemoveBuff(assignment.InjectedBuff);
+                Trace("PASSIVE", "RELEASE buff=" + assignment.InjectedBuff.name);
+            }
+
+            assignment.InjectedBody = null;
+            assignment.InjectedBuff = null;
+        }
+
+        private void MaintainPassives()
+        {
+            foreach (var entry in assignments)
+            {
+                CharacterMaster master = entry.Key;
+                PlayerAssignment state = entry.Value;
+                CharacterBody body = master != null ? master.GetBody() : null;
+                Inventory inventory = master != null ? master.inventory : null;
+
+                // A respawn produces a new body. Never leave our buff on an old body.
+                if (state.InjectedBody != null && state.InjectedBody != body)
+                    ReleaseOwnedPassive(state);
+
+                if (inventory == null || body == null)
+                {
+                    if (state.InjectedBody != null)
+                        ReleaseOwnedPassive(state);
+                    continue;
+                }
+
+                EquipmentIndex slotOne = inventory.GetEquipment(EliteEquipmentSlot).equipmentIndex;
+                EquipmentIndex active = inventory.GetEquipment(
+                    inventory.activeEquipmentLocation).equipmentIndex;
+
+                bool correctSlot = slotOne == state.Elite;
+                bool shouldMaintain = EliteSlotPolicy.ShouldMaintainPassive(
+                    settings.MaintainPassiveWhileStored.Value, correctSlot,
+                    active == state.Elite, body.healthComponent != null &&
+                    body.healthComponent.alive);
+
+                EquipmentDef elite = EquipmentCatalog.GetEquipmentDef(state.Elite);
+                BuffDef passiveBuff = elite != null ? elite.passiveBuffDef : null;
+
+                if (!shouldMaintain || passiveBuff == null || !passiveBuff.isElite)
+                {
+                    ReleaseOwnedPassive(state);
+                    if (correctSlot && passiveBuff == null && !state.MissingBuffReported)
+                    {
+                        state.MissingBuffReported = true;
+                        logger.LogWarning("[PWEI][PASSIVE] No BuffDef for elite " +
+                            state.Elite + ". Some aspect abilities may be unavailable.");
+                    }
+                    continue;
+                }
+
+                // If the game (or another mod) already granted the buff, do not
+                // stack or claim ownership of it.
+                if (body.HasBuff(passiveBuff))
+                    continue;
+
+                body.AddBuff(passiveBuff);
+                if (body.HasBuff(passiveBuff))
+                {
+                    state.InjectedBody = body;
+                    state.InjectedBuff = passiveBuff;
+                    state.Reapplications++;
+
+                    if (state.Reapplications == 1 || state.Reapplications % 50 == 0)
+                        Trace("PASSIVE", "APPLIED elite=" + state.Elite +
+                            " buff=" + passiveBuff.name +
+                            " activeQ=" + active +
+                            " reapplications=" + state.Reapplications);
+                }
+                else if (!state.MissingBuffReported)
+                {
+                    state.MissingBuffReported = true;
+                    logger.LogWarning("[PWEI][PASSIVE] Buff insertion failed for " +
+                        state.Elite + "; inspect the game's logs.");
+                }
+            }
         }
 
         internal void Tick()
@@ -78,7 +174,21 @@ namespace GiveEliteItem
                 Trace("RUN", "New run detected; physical elite slot=" + EliteEquipmentSlot);
             }
 
-            if (!settings.Enabled.Value || Time.unscaledTime < nextScan)
+            if (!settings.Enabled.Value)
+            {
+                // If disabled mid-run, relinquish previously injected buffs.
+                foreach (PlayerAssignment assignment in assignments.Values)
+                    ReleaseOwnedPassive(assignment);
+                return;
+            }
+
+            if (Time.unscaledTime >= nextPassiveCheck)
+            {
+                nextPassiveCheck = Time.unscaledTime + PassiveCheckInterval;
+                MaintainPassives();
+            }
+
+            if (Time.unscaledTime < nextScan)
                 return;
 
             nextScan = Time.unscaledTime + ScanInterval;
@@ -200,6 +310,10 @@ namespace GiveEliteItem
                     controller.networkUser.userName + " elite=" +
                     (definition != null ? definition.name : elite.ToString()) +
                     " slot1=" + stored + " Q=" + activeAfter + " noSwap=true");
+
+                // Immediately reconcile the passive; later checks keep it
+                // active even after Q equipment changes.
+                MaintainPassives();
             }
 
             // A throttled heartbeat also detects unexpected changes after pickups.
@@ -241,7 +355,9 @@ namespace GiveEliteItem
 
             Trace("VERIFY", "elite=" + assignment.Elite +
                 " slot1=" + stored + " Q=" + active +
-                " vanillaEliteBuffPresent=" + hasBuff);
+                " eliteBuffPresent=" + hasBuff +
+                " injectedByMod=" + (assignment.InjectedBody == body) +
+                " reapplications=" + assignment.Reapplications);
 
             if (!assignment.LostEliteReported && stored != assignment.Elite)
             {
@@ -256,9 +372,12 @@ namespace GiveEliteItem
             currentRun = null;
             random = null;
             nextScan = 0f;
+            nextPassiveCheck = 0f;
             nextStatus = 0f;
             missingCatalogReported = false;
             catalogListed = false;
+            foreach (PlayerAssignment assignment in assignments.Values)
+                ReleaseOwnedPassive(assignment);
             assignments.Clear();
             reportedOccupied.Clear();
             reportedFailures.Clear();

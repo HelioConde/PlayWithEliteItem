@@ -8,6 +8,10 @@ namespace GiveEliteItem
             bool alreadyAssigned, bool activeLocationIsSlotOne)
             => playerReady && slotOneIsFree && !alreadyAssigned && !activeLocationIsSlotOne;
 
+        internal static bool ShouldMaintainPassive(
+            bool enabled, bool correctSlot, bool eliteIsActive, bool characterAlive)
+            => enabled && correctSlot && !eliteIsActive && characterAlive;
+
         internal static bool IsEliteStillInPlace(
             int expectedEliteIndex, int slotOneEquipmentIndex)
             => expectedEliteIndex == slotOneEquipmentIndex;

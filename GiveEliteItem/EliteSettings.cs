@@ -13,6 +13,7 @@ namespace GiveEliteItem
         internal readonly ConfigEntry<bool> IncludeAllRegisteredEliteAspects;
         internal readonly ConfigEntry<string> AllowedEliteEquipment;
         internal readonly ConfigEntry<bool> TraceGameplay;
+        internal readonly ConfigEntry<bool> MaintainPassiveWhileStored;
 
         internal EliteSettings(ConfigFile config)
         {
@@ -31,6 +32,10 @@ namespace GiveEliteItem
             AllowedEliteEquipment = config.Bind(
                 "Distribution", "AllowedEliteEquipment", ClassicAspects,
                 "Comma-separated internal equipment names used when auto-discovery is disabled.");
+
+            MaintainPassiveWhileStored = config.Bind(
+                "Elite", "MaintainPassiveWhileStored", true,
+                "Maintain the original elite BuffDef from physical slot 1 while Q holds another equipment. Server only; no automatic equipment swapping.");
 
             TraceGameplay = config.Bind(
                 "Diagnostics", "TraceGameplay", true,

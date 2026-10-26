@@ -90,6 +90,17 @@ internal static class Program
         Check(!EliteSlotPolicy.CanAssign(true, true, false, true),
             "must not replace the currently active equipment location");
 
+        Check(EliteSlotPolicy.ShouldMaintainPassive(true, true, false, true),
+            "elite buff should be maintained when slot 1 is occupied by elite and Q is ordinary");
+        Check(!EliteSlotPolicy.ShouldMaintainPassive(false, true, false, true),
+            "config can disable injected buffs");
+        Check(!EliteSlotPolicy.ShouldMaintainPassive(true, false, false, true),
+            "missing elite must never grant powers");
+        Check(!EliteSlotPolicy.ShouldMaintainPassive(true, true, true, true),
+            "the active elite is handled by the vanilla game");
+        Check(!EliteSlotPolicy.ShouldMaintainPassive(true, true, false, false),
+            "a dead or absent player must not receive a buff");
+
         Check(EliteSlotPolicy.IsEliteStillInPlace(22, 22),
             "elite stays in slot 1 when Q changes");
         Check(!EliteSlotPolicy.IsEliteStillInPlace(22, 9),

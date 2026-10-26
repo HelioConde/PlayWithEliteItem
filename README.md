@@ -4,20 +4,20 @@
 
 O mod dá um **aspecto de elite aleatório** a cada jogador no começo da partida, guardado no **slot físico 1**. O slot normal **Q (slot 0)** continua livre para usar Radar, Tricórnio e outros equipamentos.
 
-Na versão **1.2.0**, o elite **não troca mais de slot**. Essa decisão veio do teste real: o slot secundário já apresentou o efeito visual elite enquanto o Q estava ocupado. Não há HUD nova, teclas extras ou mensagens de rede personalizadas.
+Na versão **1.2.1**, o elite **não troca de slot**. O teste da 1.2.0 revelou que estar visível no segundo slot não garante seus poderes. A correção agora mantém o **BuffDef passivo original** no servidor quando o elite está no slot 1 e o Q contém outro equipamento. Não há HUD nova, teclas extras ou mensagens de rede personalizadas.
 
 [Versão pública no Thunderstore](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar DLL de teste pelo GitHub Actions](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Guia de teste](docs/TESTE_NO_JOGO.md)
 
-> **Thunderstore: 1.0.1 (antiga). GitHub: 1.2.0 (candidata a testes).** A nova versão ainda precisa de validação completa em jogo antes de ser publicada no Thunderstore.
+> **Thunderstore: 1.0.1 (antiga). GitHub: 1.2.1 (candidata a testes).** A nova versão ainda precisa de validação completa em jogo antes de ser publicada no Thunderstore.
 
 ## Funcionamento
 
 1. Ao aparecer na partida, o servidor sorteia um aspecto elite e o entrega com `SetEquipmentIndexForSlot(elite, 1)` — técnica usada no projeto original de 2024.
 2. O elite fica **fixo no slot físico 1**, ao lado do Q, sem ser trocado por uso de equipamentos.
 3. O jogador coleta e utiliza qualquer equipamento normal no **Q**, sujeito às regras normais do Risk of Rain 2.
-4. Ao trocar o equipamento do Q, o mod **não interfere na coleta**, não modifica o slot elite e não aplica buffs artificiais.
+4. Ao trocar o equipamento do Q, o mod **não interfere na coleta** e não modifica o slot elite. Uma rotina no servidor mantém o **buff original daquele elite** enquanto o slot secundário estiver ocupado, sem criar novo tipo de buff.
 
-**Não há troca automática**, nem mesmo ao apertar Q. O jogo administra nativamente o aspecto no segundo slot. A aparência elite observada nas imagens é promissora, mas todos os efeitos passivos ainda precisam ser confirmados durante o teste.
+**Não há troca automática**, nem mesmo ao apertar Q. A aplicação do buff pelo servidor é experimental: certos elites podem depender de comportamentos adicionais além do BuffDef. Teste efeitos de combate e não apenas a aparência.
 
 Para segurança, se outro sistema já tiver colocado um equipamento no slot 1, o mod **não o substitui**. Se a API não conseguir atribuir o elite ao slot físico 1, o log informa a falha; não existe mais fallback que altere o Q.
 
@@ -41,9 +41,10 @@ O arquivo `BepInEx/config/AlchemyFlame.PlayWithEliteItem.cfg` é criado pelo Bep
 | `Distribution.UniqueBeforeRepeats` | true | Evita repetições até esgotar elites |
 | `Distribution.IncludeAllRegisteredEliteAspects` | false | Descoberta automática de elites extras |
 | `Distribution.AllowedEliteEquipment` | Sete elites clássicas | Nomes internos separados por vírgula |
-| `Diagnostics.TraceGameplay` | true | Registra concessão e verificação dos dois slots |
+| `Elite.MaintainPassiveWhileStored` | true | Mantém o buff passivo do elite guardado no slot 1, sem trocá-lo |
+| `Diagnostics.TraceGameplay` | true | Registra concessão, manutenção do buff e verificação dos dois slots |
 
-Configurações antigas `Switching.*`, `Equipment.PreferOriginalPhysicalSlot` e `Elite.KeepEliteBuffWhileReserved` **não têm efeito na versão 1.2.0**. Podem permanecer no CFG, mas não são mais lidas.
+Configurações antigas `Switching.*`, `Equipment.PreferOriginalPhysicalSlot` e `Elite.KeepEliteBuffWhileReserved` **não têm efeito na versão 1.2.1**. Podem permanecer no CFG, mas não são mais lidas.
 
 ## Dependências
 
@@ -60,7 +61,7 @@ python scripts/validate_manifest.py
 
 - `GiveEliteItem.cs`: inicialização BepInEx.
 - `EliteSettings.cs`: opções ativas.
-- `EliteRunDistributor.cs`: sorteio e concessão no segundo slot físico.
+- `EliteRunDistributor.cs`: sorteio, concessão no slot físico 1 e manutenção do BuffDef elite no servidor.
 - `EliteAspectCatalog.cs` / `AspectSelection.cs`: descoberta e sorteio.
 - `EliteSlotPolicy.cs`: regras de proteção do slot e testes puros.
 

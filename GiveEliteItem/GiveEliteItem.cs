@@ -11,7 +11,7 @@ namespace GiveEliteItem
     {
         public const string PluginGuid = "AlchemyFlame.PlayWithEliteItem";
         public const string PluginName = "PlayWithEliteItem";
-        public const string PluginVersion = "1.2.0";
+        public const string PluginVersion = "1.2.1";
 
         private EliteRunDistributor distributor;
 
@@ -22,7 +22,8 @@ namespace GiveEliteItem
             Logger.LogInfo("[PWEI][BOOT] version=" + PluginVersion +
                 " enabled=" + settings.Enabled.Value +
                 " secondSlot=1 autoSwap=DISABLED" +
-                " trace=" + settings.TraceGameplay.Value);
+                " trace=" + settings.TraceGameplay.Value +
+                " keepPassive=" + settings.MaintainPassiveWhileStored.Value);
         }
 
         private void Update()
