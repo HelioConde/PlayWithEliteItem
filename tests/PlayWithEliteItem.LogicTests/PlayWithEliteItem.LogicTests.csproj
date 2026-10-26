@@ -7,6 +7,6 @@
   <ItemGroup>
     <Compile Include="../../GiveEliteItem/AspectSelection.cs" Link="AspectSelection.cs" />
     <Compile Include="../../GiveEliteItem/EliteEquipmentNames.cs" Link="EliteEquipmentNames.cs" />
-    <Compile Include="../../GiveEliteItem/EliteRotationRules.cs" Link="EliteRotationRules.cs" />
+    <Compile Include="../../GiveEliteItem/EliteSlotPolicy.cs" Link="EliteSlotPolicy.cs" />
   </ItemGroup>
 </Project>

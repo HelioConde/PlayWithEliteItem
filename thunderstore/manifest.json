@@ -1,10 +1,9 @@
 {
   "name": "PlayWithEliteItem",
-  "version_number": "1.1.9",
+  "version_number": "1.2.0",
   "website_url": "https://github.com/HelioConde/PlayWithEliteItem",
-  "description": "Restaura alternancia dos slots fisicos 0 e 1 do mod original com fallback server-side.",
+  "description": "Elite aleatorio fixo no segundo slot fisico; equipamento normal no Q. Server-side, sem troca automatica.",
   "dependencies": [
-    "bbepis-BepInExPack-5.4.2122",
-    "RiskofThunder-HookGenPatcher-1.2.9"
+    "bbepis-BepInExPack-5.4.2122"
   ]
 }

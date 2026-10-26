@@ -2,7 +2,6 @@ using BepInEx.Configuration;
 
 namespace GiveEliteItem
 {
-    /// <summary>Configuration kept in one place for future compatibility.</summary>
     internal sealed class EliteSettings
     {
         private const string ClassicAspects =
@@ -13,57 +12,29 @@ namespace GiveEliteItem
         internal readonly ConfigEntry<bool> UniqueBeforeRepeats;
         internal readonly ConfigEntry<bool> IncludeAllRegisteredEliteAspects;
         internal readonly ConfigEntry<string> AllowedEliteEquipment;
-        internal readonly ConfigEntry<bool> AutomaticSwapAfterUse;
-        internal readonly ConfigEntry<float> SwapDelaySeconds;
-        internal readonly ConfigEntry<bool> VerboseLogging;
         internal readonly ConfigEntry<bool> TraceGameplay;
-        internal readonly ConfigEntry<bool> KeepEliteBuffWhileReserved;
-        internal readonly ConfigEntry<bool> PreferOriginalPhysicalSlot;
 
         internal EliteSettings(ConfigFile config)
         {
             Enabled = config.Bind(
                 "General", "Enabled", true,
-                "Equip a random elite aspect at spawn, preserving it in a virtual second slot on pickup.");
+                "Assign one elite aspect to physical equipment slot 1 for each player.");
 
             UniqueBeforeRepeats = config.Bind(
                 "Distribution", "UniqueBeforeRepeats", true,
-                "Prefer different aspects until all eligible aspects have been assigned.");
+                "Prefer unique elite aspects until the eligible pool is exhausted.");
 
             IncludeAllRegisteredEliteAspects = config.Bind(
                 "Distribution", "IncludeAllRegisteredEliteAspects", false,
-                "Advanced: include modded or hidden elite equipment from the equipment catalog.");
+                "Advanced: include all registered equipment with elite passive buffs.");
 
             AllowedEliteEquipment = config.Bind(
                 "Distribution", "AllowedEliteEquipment", ClassicAspects,
-                "Comma-separated internal names used when catalog discovery is disabled.");
+                "Comma-separated internal equipment names used when auto-discovery is disabled.");
 
-            PreferOriginalPhysicalSlot = config.Bind(
-                "Equipment", "PreferOriginalPhysicalSlot", true,
-                "Try the 2024 technique of assigning the elite directly to physical equipment slot 1. If unavailable, fall back to the virtual reserve.");
-
-            KeepEliteBuffWhileReserved = config.Bind(
-                "Elite", "KeepEliteBuffWhileReserved", true,
-                "Apply the vanilla passive elite buff while the elite equipment is stored in the server reserve.");
-
-            AutomaticSwapAfterUse = config.Bind(
-                "Switching", "AutomaticSwapAfterUse", true,
-                "Exchange active and reserved equipment after a successful equipment activation.");
-
-            SwapDelaySeconds = config.Bind(
-                "Switching", "SwapDelaySeconds", 0.3f,
-                new ConfigDescription("Delay after a successful activation before swapping.",
-                    new AcceptableValueRange<float>(0f, 2f)));
-
-            VerboseLogging = config.Bind(
-                "Diagnostics", "VerboseLogging", false,
-                "Log additional low-level equipment events.");
-
-            // New key: stays enabled even for profiles where the older
-            // VerboseLogging setting was previously saved as false.
             TraceGameplay = config.Bind(
                 "Diagnostics", "TraceGameplay", true,
-                "Temporarily log run, catalog, player and equipment state for troubleshooting.");
+                "Log initial elite assignments, inventory verification and run status.");
         }
     }
 }

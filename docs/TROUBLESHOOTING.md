@@ -1,59 +1,30 @@
-# PlayWithEliteItem — erro MMHOOK_RoR2 identificado no log
+# PlayWithEliteItem — solução de problemas
 
-## Por que o Q estava vazio?
+## Como confirmar o carregamento
 
-O `LogOutput(2).log` da versão 1.1.6 mostra:
+A presença do nome do mod no BepInExGUI não garante que seu código tenha iniciado. Procure no `LogOutput.log`:
 
 ```text
-[Info   : BepInEx] Loading [PlayWithEliteItem 1.1.6]
-[Error  : Unity Log] FileNotFoundException:
-Could not load file or assembly 'MMHOOK_RoR2, Version=0.0.0.0'
+[PWEI][BOOT] version=1.2.0
+[PWEI][RUN] New run detected
+[PWEI][GRANT] SUCCESS ... slot1=...
+[PWEI][VERIFY] ... slot1=... Q=...
 ```
 
-O BepInEx **encontrou** o plugin, mas o jogo não conseguiu executar o
-`Awake()` porque `MMHOOK_RoR2.dll` não estava disponível. Isso explica
-a ausência completa de mensagens `[PWEI]` e a falta do elite ao nascer.
+Se não existir `[PWEI][BOOT]`, confirme que a DLL está na pasta do perfil usado para iniciar o jogo e que o BepInExPack está instalado.
 
-O mesmo log lista quatro patchers: BepInEx.Preloader, SeekersPatcher,
-BepInEx.GUI.Loader e FixPluginTypesSerialization. **HookGenPatcher não está
-entre eles**.
+## E se o elite não aparecer?
 
-## Corrigir seu perfil r2modman
+Procure `[PWEI][CATALOG]` (lista de elites), `[PWEI][SLOT]` (segundo slot ocupado ou ativo), ou `[PWEI][GRANT]` (resultado da concessão). O slot Q pode começar vazio — **o elite fica à direita do Q**.
 
-1. Abra o **mesmo perfil** que usa para jogar.
-2. Instale **RiskofThunder / HookGenPatcher v1.2.9**, com todas as dependências.
-3. Inicie com **Start modded** para gerar `MMHOOK_RoR2.dll` no preloader.
-4. Confira o `LogOutput.log`: o patcher deve aparecer no início, seguido de
-   `[PWEI][BOOT]`. Ao iniciar uma partida, devem aparecer `[PWEI][RUN]`,
-   `[PWEI][CATALOG]` e `[PWEI][GRANT]`.
-5. Confira a DLL normalmente gerada em
-   `BepInEx/plugins/MMHOOK/MMHOOK_RoR2.dll` dentro do perfil.
+Se um equipamento já existir no segundo slot, o plugin não o sobrescreve.
 
-**A versão 1.1.6 pode ser testada sem recompilar**, simplesmente instalando
-HookGenPatcher. A versão 1.1.7 documenta a dependência no manifesto.
+## Preciso do HookGenPatcher?
 
-Se não carregar, envie o novo `LogOutput.log`. Não copie DLLs de sites
-desconhecidos nem reinstale a antiga suíte R2API inteira.
+**A partir de 1.2.0, este plugin não usa hooks `On.RoR2` e não requer HookGenPatcher diretamente.** Outros mods instalados no perfil podem precisar dele.
 
-## Por que o manifesto da versão anterior estava errado?
+As versões 1.1.6 até 1.1.9 utilizavam hooks e podiam falhar com a ausência de `MMHOOK_RoR2.dll`. A 1.2.0 elimina esses hooks, em vez de criar novas dependências.
 
-O pacote `MMHOOK.RoR2` em `GiveEliteItem.csproj` é uma referência para
-**compilar** os hooks `On.RoR2`. No computador do jogador, HookGenPatcher
-é quem gera a assembly correspondente antes de carregar os plugins.
-Portanto, o manifesto precisa declarar **duas dependências diretas**:
+## Logs após coleta
 
-```json
-"dependencies": [
-  "bbepis-BepInExPack-5.4.2122",
-  "RiskofThunder-HookGenPatcher-1.2.9"
-]
-```
-
-O GitHub Actions verifica o manifesto, mas não executa o jogo.
-Apenas o próximo teste real pode comprovar o funcionamento da mecânica.
-
-## Erro anterior de Newtonsoft.Json
-
-Uma instalação anterior apresentou erro distinto, relacionado a
-`Newtonsoft.Json 12.0.0.0`. O log atual da versão 1.1.6 fornece
-um diagnóstico específico e diferente: ausência de `MMHOOK_RoR2`.
+O `[PWEI][VERIFY]` reporta periodicamente o conteúdo do slot 1 e do Q e indica se o buff de elite foi detectado. **Esta versão não aplica buffs manualmente nem troca os equipamentos.**

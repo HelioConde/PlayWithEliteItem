@@ -77,54 +77,23 @@ internal static class Program
         Check(EliteEquipmentNames.Parse(" ,  , ").Count == 0, "blank config handled");
     }
 
-    private static void TestRotation()
+    private static void TestPermanentPhysicalSlot()
     {
-        Check(EliteRotationRules.ShouldRotate(true, true, false),
-            "successful equipment use should swap with reserve");
-        Check(!EliteRotationRules.ShouldRotate(false, true, false),
-            "failed activation must not swap");
-        Check(!EliteRotationRules.ShouldRotate(true, false, false),
-            "empty secondary slot must not swap");
-        Check(!EliteRotationRules.ShouldRotate(true, true, true),
-            "pending swap must not duplicate");
+        Check(EliteSlotPolicy.CanAssign(true, true, false, false),
+            "spawned player receives elite in empty physical slot 1");
+        Check(!EliteSlotPolicy.CanAssign(false, true, false, false),
+            "must wait for player body");
+        Check(!EliteSlotPolicy.CanAssign(true, false, false, false),
+            "must not overwrite another secondary equipment");
+        Check(!EliteSlotPolicy.CanAssign(true, true, true, false),
+            "must not assign twice in the same run");
+        Check(!EliteSlotPolicy.CanAssign(true, true, false, true),
+            "must not replace the currently active equipment location");
 
-        Check(EliteRotationRules.ShouldGrantAtSpawn(true, true, false),
-            "spawned player should receive an active elite");
-        Check(!EliteRotationRules.ShouldGrantAtSpawn(false, true, false),
-            "must wait for spawned player body");
-        Check(!EliteRotationRules.ShouldGrantAtSpawn(true, true, true),
-            "grant only once per run");
-        Check(!EliteRotationRules.ShouldGrantAtSpawn(true, false, false),
-            "extra-slot characters use vanilla equipment behavior");
-
-        Check(EliteRotationRules.ShouldProtectElitePickup(false, true, true),
-            "first normal pickup protects elite even with empty reserve");
-        Check(!EliteRotationRules.ShouldProtectElitePickup(false, false, true),
-            "normal active item uses vanilla pickup");
-        Check(!EliteRotationRules.ShouldProtectElitePickup(true, true, true),
-            "pending swap must not intercept pickup");
-        Check(!EliteRotationRules.ShouldProtectElitePickup(false, true, false),
-            "extra-slot inventory remains vanilla");
-
-        Check(EliteRotationRules.ShouldMaintainEliteBuff(true, true, false, true),
-            "reserved elite retains its passive while other equipment is in Q");
-        Check(!EliteRotationRules.ShouldMaintainEliteBuff(false, true, false, true),
-            "reserve-buff compatibility setting can disable the feature");
-        Check(!EliteRotationRules.ShouldMaintainEliteBuff(true, false, false, true),
-            "no elite in reserve means no injected buff");
-        Check(!EliteRotationRules.ShouldMaintainEliteBuff(true, true, true, true),
-            "active elite buff is provided by the game without duplication");
-        Check(!EliteRotationRules.ShouldMaintainEliteBuff(true, true, false, false),
-            "no character body means no buff to apply");
-
-        Check(EliteRotationRules.CanCommitSwap(true, true, true, true),
-            "same run, master and equipment allows swap");
-        Check(!EliteRotationRules.CanCommitSwap(false, true, true, true),
-            "old run cannot commit");
-        Check(!EliteRotationRules.CanCommitSwap(true, false, true, true),
-            "another player's reserve cannot commit");
-        Check(!EliteRotationRules.CanCommitSwap(true, true, false, true),
-            "equipment changed during delay cannot commit");
+        Check(EliteSlotPolicy.IsEliteStillInPlace(22, 22),
+            "elite stays in slot 1 when Q changes");
+        Check(!EliteSlotPolicy.IsEliteStillInPlace(22, 9),
+            "unexpected replacement of elite is detectable");
     }
 
     private static int Main()
@@ -133,7 +102,7 @@ internal static class Program
         {
             TestDistribution();
             TestAllowlist();
-            TestRotation();
+            TestPermanentPhysicalSlot();
             Console.WriteLine("PASS: " + assertions + " assertions.");
             return 0;
         }
