@@ -1,12 +1,21 @@
-# PlayWithEliteItem
+<div align="center">
+  <h1>⚡ PlayWithEliteItem</h1>
+  <p><strong>Risk of Rain 2 · Aspectos elite no segundo slot físico · Server-side</strong></p>
+  <p>Um mod publicado para a comunidade, com uma implementação modernizada em testes.</p>
+  <p>
+    <a href="https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/"><img alt="Thunderstore 1.0.1 publicada" src="https://img.shields.io/badge/Thunderstore-1.0.1%20publicada-16803c?style=for-the-badge"></a>
+    <a href="https://github.com/HelioConde/PlayWithEliteItem/actions"><img alt="GitHub 1.2.1 candidata a testes" src="https://img.shields.io/badge/GitHub-1.2.1%20em%20testes-64748b?style=for-the-badge"></a>
+  </p>
+  <p><a href="https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/"><strong>Versão pública</strong></a> · <a href="https://github.com/HelioConde/PlayWithEliteItem/actions"><strong>Build experimental</strong></a> · <a href="docs/TESTE_NO_JOGO.md"><strong>Guia de validação</strong></a></p>
+</div>
 
-**Risk of Rain 2 · Elite permanente no segundo slot · Server-side**
+---
+
+## Visão geral
 
 O mod dá um **aspecto de elite aleatório** a cada jogador no começo da partida, guardado no **slot físico 1**. O slot normal **Q (slot 0)** continua livre para usar Radar, Tricórnio e outros equipamentos.
 
 Na versão **1.2.1**, o elite **não troca de slot**. O teste da 1.2.0 revelou que estar visível no segundo slot não garante seus poderes. A correção agora mantém o **BuffDef passivo original** no servidor quando o elite está no slot 1 e o Q contém outro equipamento. Não há HUD nova, teclas extras ou mensagens de rede personalizadas.
-
-[Versão pública no Thunderstore](https://thunderstore.io/c/riskofrain2/p/CONDE/PlayWithEliteItem/) · [Baixar DLL de teste pelo GitHub Actions](https://github.com/HelioConde/PlayWithEliteItem/actions) · [Guia de teste](docs/TESTE_NO_JOGO.md)
 
 > **Thunderstore: 1.0.1 (antiga). GitHub: 1.2.1 (candidata a testes).** A nova versão ainda precisa de validação completa em jogo antes de ser publicada no Thunderstore.
 
